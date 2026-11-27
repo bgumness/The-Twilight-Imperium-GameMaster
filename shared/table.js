@@ -48,6 +48,34 @@
     list(gid) { return (get(K.outbox) || []).filter(x => !gid || x.gid === gid); }
   };
 
+  /* One record per player of what other tools care about, shared by the Arbiter and the Council:
+       techs  Battle Arbiter tech keys (antimass, plasma, …)   upg   unit upgrades (dn, cv, …)
+       flags  Arbiter leaders/notes/abilities                 votes Council voting abilities (pi, gila, …)
+       start  starting technologies by name, set by the Ledger's setup
+     Stored as { gid, p: { <playerId>: {…} } } under ti4gm:profiles. */
+  K.profiles = 'ti4gm:profiles';
+  TI4.profiles = {
+    all() { const t = TI4.table.read(), r = get(K.profiles); return r && t && r.gid === t.gid ? r.p || {} : {}; },
+    get(pid) { return this.all()[pid] || null; },
+    reset(gid, p) { put(K.profiles, { gid, p: p || {} }); TI4.emit('profiles', {}); },
+    update(pid, patch) {
+      const t = TI4.table.read(); if (!t || !pid) return false;
+      let r = get(K.profiles); if (!r || r.gid !== t.gid) r = { gid: t.gid, p: {} };
+      const prev = r.p[pid] || {}, next = Object.assign({}, prev, patch);
+      if (JSON.stringify(prev) === JSON.stringify(next)) return false;
+      r.p[pid] = next; put(K.profiles, r); TI4.emit('profiles', { pid });
+      return true;
+    }
+  };
+
+  /* Table options chosen once in the setup wizard. */
+  K.options = 'ti4gm:options';
+  TI4.options = {
+    DEFAULTS: { sound: false, fast: false, quick: true, motion: true },
+    read() { return Object.assign({}, this.DEFAULTS, get(K.options) || {}); },
+    write(o) { put(K.options, Object.assign(this.read(), o)); TI4.emit('options', {}); }
+  };
+
   TI4.pending = {
     set(tool, req) { const all = get(K.pending) || {}; all[tool] = Object.assign({ ts: Date.now() }, req); put(K.pending, all); TI4.emit('pending', { tool }); },
     peek(tool) { const all = get(K.pending) || {}; return all[tool] || null; },

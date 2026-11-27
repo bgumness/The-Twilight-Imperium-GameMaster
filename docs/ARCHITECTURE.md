@@ -32,7 +32,7 @@ Things worth knowing:
 
 ```
 /                         GitHub Pages serves this folder as-is (no build step)
-├─ index.html             Shell: top bar (Ledger · Council · Arbiter), players in the bar, About/notice   ✅
+├─ index.html             Shell: the Ledger full-screen; Council and Arbiter slide up over it. About/notice   ✅
 ├─ ledger/                Ledger module (index.html, scenes.js, scenes.css)   ✅ ported: shared art, real download
 ├─ council/               Council Chamber module   ✅ ported: players from the table, results to the Ledger
 ├─ arbiter/               Battle Arbiter module (also /arbiter/#display for the TV)   ✅ ported: roster from the table, battles from/to the Ledger
@@ -166,8 +166,19 @@ agenda hand-off and combat hand-off.
   the defender, the shell switches to the Arbiter with both factions and their saved techs loaded, at the
   System step. When the battle ends the result goes to the Ledger's log, and "Back to the Ledger" returns
   to the same step with the turn timer still running.
-* **Shell.** Modules load once in same-origin iframes and stay alive while hidden; tabs show a dot when
-  another module has something waiting.
+* **Shell (revised).** No top bar. The Ledger fills the screen; the Council and Arbiter slide up over it
+  as sheets and stay alive when hidden. The Council rises when the agenda phase starts and sinks back after
+  the second agenda; the Arbiter rises from a combat step. Both can also be opened from the Ledger's
+  Council and Battle buttons, and each has a "Back to the game" button.
+* **One setup.** The Ledger's wizard now also covers the other tools: a Table options panel (battle sound,
+  fast battle animations, auto-advance rule tips, animated agenda reveals → `ti4gm:options`) and a Starting
+  technologies list filled from each faction sheet (`TI4.START` in shared/factions.js; Argent picks 2,
+  Winnu picks 1).
+* **Shared tech + abilities record.** `ti4gm:profiles` holds one record per player: Arbiter tech keys,
+  unit upgrades, Arbiter flags, Council voting abilities, starting techs by name. Setup seeds it (e.g.
+  Letnev → Antimass + Plasma Scoring in the Arbiter; Mahact → Predictive Intelligence in the Council).
+  The Arbiter writes it on every roster save and reads it on sync; the Council writes its seat abilities
+  on save and reads them on sync.
 
 Known gaps:
 * The modules still use their original storage keys (`ti4-objective-ledger-v1`, `galactic-council-chamber-v1`,

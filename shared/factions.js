@@ -49,5 +49,41 @@
     purple: '#a77bff', black: '#3a4152', orange: '#ff9a3c', pink: '#ff7ac6'
   };
 
-  root.TI4 = Object.assign(root.TI4 || {}, { FACTIONS, faction: id => byId[id] || null, fromLegacy, COLORS });
+  /* Starting technologies from each faction sheet (base + PoK). Argent and Winnu choose theirs. */
+  const START = {
+    arborec: ['Magen Defense Grid'],
+    letnev: ['Antimass Deflectors', 'Plasma Scoring'],
+    saar: ['Antimass Deflectors'],
+    muaat: ['Plasma Scoring'],
+    hacan: ['Antimass Deflectors', 'Sarween Tools'],
+    sol: ['Antimass Deflectors', 'Neural Motivator'],
+    creuss: ['Gravity Drive'],
+    l1z1x: ['Neural Motivator', 'Plasma Scoring'],
+    mentak: ['Sarween Tools', 'Plasma Scoring'],
+    naalu: ['Neural Motivator', 'Sarween Tools'],
+    nekro: ['Dacxive Animators'],
+    sardakk: [],
+    jolnar: ['Neural Motivator', 'Antimass Deflectors', 'Sarween Tools', 'Plasma Scoring'],
+    winnu: [],
+    xxcha: ['Graviton Laser System'],
+    yin: ['Sarween Tools'],
+    yssaril: ['Neural Motivator'],
+    argent: [],
+    empyrean: ['Dark Energy Tap'],
+    mahact: ['Bio-Stims', 'Predictive Intelligence'],
+    naazrokha: ['Psychoarchaeology', 'AI Development Algorithm'],
+    nomad: ['Sling Relay'],
+    titans: ['Antimass Deflectors', 'Scanlink Drone Network'],
+    vuilraith: ['Self-Assembly Routines']
+  };
+  const NO_PREREQ = ['Neural Motivator', 'Sarween Tools', 'Plasma Scoring', 'Antimass Deflectors', 'Psychoarchaeology', 'Dark Energy Tap', 'Scanlink Drone Network', 'AI Development Algorithm'];
+  const CHOOSE = {
+    argent: { n: 2, from: ['Neural Motivator', 'Sarween Tools', 'Plasma Scoring'] },
+    winnu: { n: 1, from: NO_PREREQ }
+  };
+  /* Which technologies the other tools act on: Battle Arbiter tech keys, Council voting abilities. */
+  const TECH_ARBITER = { 'Antimass Deflectors': 'antimass', 'Plasma Scoring': 'plasma', 'Graviton Laser System': 'graviton', 'Magen Defense Grid': 'magen', 'Dacxive Animators': 'dacxive', 'Duranium Armor': 'duranium', 'Assault Cannon': 'assault', 'X-89 Bacterial Weapon': 'x89' };
+  const TECH_COUNCIL = { 'Predictive Intelligence': 'pi' };
+
+  root.TI4 = Object.assign(root.TI4 || {}, { FACTIONS, faction: id => byId[id] || null, fromLegacy, COLORS, START, CHOOSE, TECH_ARBITER, TECH_COUNCIL });
 })(typeof window !== 'undefined' ? window : globalThis);

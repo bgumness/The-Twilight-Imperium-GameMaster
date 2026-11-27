@@ -1,11 +1,12 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}.bysc{display:grid;gap:8px;margin-top:6px}.byscrow{display:flex;align-items:center;justify-content:space-between;gap:12px}.byscrow small{display:block;opacity:.7;font-size:.85em}.byscctl{display:flex;align-items:center;gap:10px}.byscctl b{min-width:1.4em;text-align:center}#gmPill{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:999;display:flex;align-items:center;gap:12px;max-width:calc(100% - 24px);
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}.bysc{display:grid;gap:8px;margin-top:6px}.byscrow{display:flex;align-items:center;justify-content:space-between;gap:12px}.byscrow small{display:block;opacity:.7;font-size:.85em}.byscctl{display:flex;align-items:center;gap:10px}.byscctl b{min-width:1.4em;text-align:center}#gmPill{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:999;display:flex;align-items:center;gap:12px;max-width:calc(100% - 24px);
   padding:8px 8px 8px 16px;border-radius:999px;background:rgba(10,14,26,.94);border:1px solid rgba(255,122,82,.6);box-shadow:0 10px 30px rgba(0,0,0,.5);color:#e9eef7;font:500 14px/1.3 Barlow,system-ui,sans-serif}
 #gmPill button{flex:none;height:36px;padding:0 16px;border-radius:999px;border:0;background:#ff7a52;color:#160805;font:700 12px Oxanium,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
 #gmPill.done{border-color:#8be6e2}#gmPill.done button{background:#8be6e2;color:#04121a;animation:gmp 1.4s ease-in-out infinite}
 @keyframes gmp{50%{box-shadow:0 0 0 6px rgba(139,230,226,.25)}}
 #gmPill span{min-width:0}
-@media (max-width:700px){#gmPill{top:0;bottom:auto;left:0;right:0;transform:none;max-width:none;border-radius:0 0 16px 16px;padding:8px 8px 8px 14px;font-size:13px;border-top:0}
-  #gmPill span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#gmPill button{height:34px;padding:0 12px;font-size:11px}}
+#gmPill.bare{padding:5px;left:auto;right:12px;transform:none}#gmPill.bare span{display:none}#gmPill.bare button{background:rgba(255,122,82,.16);color:#ffb39b;border:1px solid rgba(255,122,82,.55)}
+@media (max-width:700px){#gmPill:not(.bare){top:0;bottom:auto;left:0;right:0;transform:none;max-width:none;border-radius:0 0 16px 16px;padding:8px 8px 8px 14px;font-size:13px;border-top:0}
+  #gmPill span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#gmPill button{height:34px;padding:0 12px;font-size:11px}#gmPill.bare{top:8px;right:8px}}
 </style></head><body>
 <title>TI4 Battle Arbiter</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -2537,7 +2538,7 @@ const PROF_KEYS=['color','upg','techs','flags','tg'];
 let GAME=null;
 try{ GAME=JSON.parse(localStorage.getItem(GSTORE)); }catch(e){ GAME=null; }
 if (GAME && !(GAME.players&&GAME.players.length)) GAME=null;
-function saveGame(){ try{ GAME?localStorage.setItem(GSTORE,JSON.stringify(GAME)):localStorage.removeItem(GSTORE); }catch(e){} }
+function saveGame(){ try{ GAME?localStorage.setItem(GSTORE,JSON.stringify(GAME)):localStorage.removeItem(GSTORE); }catch(e){} if (window.__gmReady) gmPushProfiles(); }
 const clone=o=>JSON.parse(JSON.stringify(o===undefined?null:o));
 function prof(fac){ return GAME ? GAME.players.find(p=>p.fac===fac) : null; }
 function pullProfile(s){ const p=prof(CFG[s].fac); if (!p) return; for (const k of PROF_KEYS) CFG[s][k]=clone(p[k]) ?? (k==='tg'?0:k==='flags'?{}:k==='color'?'red':[]); }
@@ -4515,10 +4516,25 @@ function gmSync(){
   if (!GAME || GAME.gid!==t.gid) GAME={players:[], history:[], gid:t.gid};
   const old=GAME.players||[];
   GAME.players=t.players.filter(gmKey).map(p=>{ const k=gmKey(p), prev=old.find(x=>x.fac===k);
-    return Object.assign(prev||{fac:k, upg:[], techs:[], flags:{}, tg:0}, {name:p.name, color:COLORS.some(c=>c.k===p.color)?p.color:'red', pid:p.id}); });
+    const pr=TI4.profiles.get(p.id), base=prev||{fac:k, upg:[], techs:[], flags:{}, tg:0};
+    if (pr){ if (Array.isArray(pr.techs)) base.techs=pr.techs.slice(); if (Array.isArray(pr.upg)) base.upg=pr.upg.slice(); if (pr.flags) base.flags=Object.assign({}, pr.flags); }
+    return Object.assign(base, {name:p.name, color:COLORS.some(c=>c.k===p.color)?p.color:'red', pid:p.id}); });
   GAME.round=t.round||GAME.round||1;
   if (GAME.players.length<2) return false;
-  saveGame(); ensureRosterSides(); save(); return true;
+  gmApplyOptions(); saveGame(); ensureRosterSides(); save(); return true;
+}
+function gmPushProfiles(){
+  if (!GM || !GAME || !GAME.players) return;
+  for (const p of GAME.players) if (p.pid) TI4.profiles.update(p.pid, {techs:(p.techs||[]).slice(), upg:(p.upg||[]).slice(), flags:Object.assign({}, p.flags||{})});
+}
+function gmApplyOptions(){
+  const o=TI4.options.read();
+  CFG.ui.fast=!!o.fast; CFG.ui.quick=o.quick!==false;
+  if (!!o.sound!==!!CFG.ui.sound){
+    CFG.ui.sound=!!o.sound;
+    if (o.sound){ const go=()=>{ sfxEnable(true); syncSound(); removeEventListener('pointerdown',go); }; addEventListener('pointerdown',go); }
+    else { try{ sfxEnable(false); syncSound(); }catch(e){} }
+  }
 }
 function gmPid(fac){ const p=GAME&&GAME.players.find(x=>x.fac===fac); return p&&p.pid||null; }
 let GMREQ=null;
@@ -4538,20 +4554,24 @@ function gmBattleDone(res, title){
   if (!GM || !TI4.table.read()) return;
   const att=gmPid(CFG.A.fac), def=gmPid(CFG.D.fac), win=res.winner==='A'?att:res.winner==='D'?def:null;
   TI4.outbox.push({kind:'arbiter:result', attacker:att, defender:def, winner:win, text:String(title||'Battle resolved').replace(/\s+/g,' ').trim(), rounds:res.rounds||null, req:GMREQ?GMREQ.ts:null});
-  if (GMREQ) gmPill('Result sent to the Ledger.', true);
+  gmPill(GMREQ ? 'Result sent to the game log.' : 'Battle saved to the game log.', true);
 }
 function gmPill(msg, done){
   if (!GM || !TI4.inShell) return;
   let el=document.getElementById('gmPill');
   if (!el){ el=document.createElement('div'); el.id='gmPill';
-    el.innerHTML='<span></span><button type="button">Back to the Ledger</button>';
-    el.querySelector('button').onclick=()=>{ if (GMREQ){ TI4.pending.clear('arbiter'); GMREQ=null; } el.remove(); TI4.open('ledger'); };
+    el.innerHTML='<span></span><button type="button">Back to the game</button>';
+    el.querySelector('button').onclick=()=>{ if (GMREQ){ TI4.pending.clear('arbiter'); GMREQ=null; } gmPill(''); TI4.open('ledger'); };
     document.body.appendChild(el); }
-  el.className=done?'done':''; el.querySelector('span').textContent=msg;
+  el.className=(done?'done':'')+(msg?'':' bare'); el.querySelector('span').textContent=msg||'';
 }
 window.__gm={battleDone:gmBattleDone, take:gmTakeRequest};
 if (GM){
+  window.__gmReady=true;
   gmSync();
+  gmPill('');
+  TI4.on('profiles', m=>{ if (m.from!==location.pathname && (!current || current.finished)) gmSync(); });
+  TI4.on('options', ()=>{ gmApplyOptions(); save(); });
   TI4.on('table', ()=>{ if (!current || current.finished) gmSync(); });
   TI4.on('pending', m=>{ if (m.tool==='arbiter') gmTakeRequest(); });
   TI4.on('shell:shown', m=>{ if (m.tool==='arbiter') gmTakeRequest(); });

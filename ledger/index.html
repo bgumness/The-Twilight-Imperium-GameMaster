@@ -415,6 +415,15 @@ body{overflow-x:hidden;overflow-y:auto;display:block}
 @keyframes kb{from{transform:scale(1.02)}to{transform:scale(1.14) translate(-2%,-2%)}}
 .vc-art .glow{position:absolute;inset:0;background:radial-gradient(circle at 40% 30%,transparent 40%,rgba(4,6,12,.6))}
 .vc-art .fallback{position:absolute;inset:0;display:grid;place-items:center}
+.wz-tech{display:grid;gap:8px;margin:0 0 22px}
+.wz-trow{display:grid;grid-template-columns:auto minmax(120px,190px) 1fr;align-items:center;gap:12px;padding:10px 12px;border:1px solid rgba(255,255,255,.08);border-left:3px solid var(--c);border-radius:12px;background:rgba(255,255,255,.02)}
+.wz-trow>div:nth-child(2) b{display:block}.wz-trow>div:nth-child(2) span{font-size:12px;color:var(--dim,#8d97ab)}
+.wz-trow .tok{width:34px;height:34px}
+.chip.tch{cursor:default}button.chip.tch{cursor:pointer}
+.chip.tch.live[aria-pressed="true"]{border-color:var(--gold,#e8c36a);box-shadow:0 0 0 1px rgba(232,195,106,.35) inset}
+@media (max-width:640px){.wz-trow{grid-template-columns:auto 1fr}.wz-trow .chips{grid-column:1/-1}}
+body:not(.gm) .gm-only{display:none}
+.gm-foot{margin:28px 0 8px;text-align:center;font-size:12px;color:var(--dim,#8d97ab)}.gm-foot button{background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit}
 .gm-inbox{border:1px solid rgba(232,195,106,.45);background:linear-gradient(180deg,rgba(232,195,106,.10),rgba(232,195,106,.03));border-radius:14px;padding:12px 14px;margin:0 0 14px;display:grid;gap:8px}
 .gm-inbox .eyebrow{color:var(--gold)}
 .gm-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.gm-row>span{flex:1;min-width:220px;line-height:1.4}
@@ -690,6 +699,8 @@ textarea.inp{min-height:120px;font:400 13px var(--mono)}
     <button class="btn secret" data-act="secret">Score secret<kbd>X</kbd></button>
     <button class="btn" data-act="award">Other points<kbd>P</kbd></button>
     <button class="btn" data-act="archive">Archive<kbd>A</kbd></button>
+    <button class="btn gm-only" data-act="council" title="Open the Galactic Council Chamber">Council</button>
+    <button class="btn gm-only" data-act="battle" title="Open the Battle Arbiter">Battle</button>
     <button class="btn" data-act="undo" id="undoBtn">Undo<kbd>Z</kbd></button>
     <button class="btn" data-act="results">Results</button>
     <button class="btn" data-act="edit">Edit game<kbd>E</kbd></button>
@@ -816,6 +827,7 @@ textarea.inp{min-height:120px;font:400 13px var(--mono)}
   </div>
 </div>
 
+<p class="gm-foot">Fan-made and free. Not affiliated with Fantasy Flight Games or Asmodee. <button data-act="about">About &amp; credits</button></p>
 <script src="../shared/factions.js"></script>
 <script src="../shared/bus.js"></script>
 <script src="../shared/table.js"></script>
@@ -1544,6 +1556,9 @@ document.addEventListener("click", e => {
   else if (a === "edit") openEdit();
   else if (a === "wizard") openWizard();
   else if (a === "results") openResults();
+  else if (a === "council") { if (GM) TI4.open("council"); }
+  else if (a === "battle") { if (GM) TI4.open("arbiter"); }
+  else if (a === "about") { if (GM) TI4.emit("shell:about"); }
   else if (a === "undo") undo();
   else if (a === "round+") commit(() => { S.round++; });
   else if (a === "round-") { if (S.round > 1) commit(() => { S.round--; }); }
@@ -1664,6 +1679,7 @@ function toPhase(ph){
   const g = S.g;
   if (ph === "action") return beginAction();
   commit(() => { flush(); g.active = null; g.turnStart = null; g.phase = ph; if (ph === "status") g.checks = []; }, `${ph[0].toUpperCase() + ph.slice(1)} phase begins.`, "rev");
+  if (ph === "agenda" && GM && agendaOn()) setTimeout(() => TI4.open("council"), 450);
 }
 function newRound(){
   const g = S.g;
@@ -2036,9 +2052,29 @@ function openWizard(){
   const cur = S.sample ? [] : S.players;
   const n = Math.max(3, Math.min(8, cur.length || 6));
   const used = new Set();
-  W = {step:0, n, goal:S.goal || 10, omega:S.omega !== false, clock:true, pick:-1, speaker:-1, checks:[],
+  W = {step:0, n, goal:S.goal || 10, omega:S.omega !== false, clock:true, pick:-1, speaker:-1, checks:[], opt:GM ? TI4.options.read() : {}, choice:{},
     players:[...Array(8)].map((_, i) => { const p = cur[i]; const col = p?.color || Object.keys(COLORS).find(k => !used.has(k)); used.add(col); return {name:p?.name || "", faction:p?.faction || "", color:col}; })};
   drawWizard(); open("wizard");
+}
+function fidOf(f){ return (TI4.fromLegacy("ledger", f) || {}).id || null; }
+function wizTechHTML(ps){
+  return `<h2 class="wz-h">Starting technologies</h2><p class="wz-sub">Filled in from each faction sheet and shared with the Battle Arbiter and Council Chamber, so nobody enters them twice.</p><div class="wz-tech">` +
+    ps.map((p, i) => { const id = fidOf(p.faction), fixed = TI4.START[id] || [], ch = TI4.CHOOSE[id], pick = W.choice[i] || [], c = COLORS[p.color] || COLORS.blue;
+      const used = t => TI4.TECH_ARBITER[t] || TI4.TECH_COUNCIL[t];
+      const chip = (t, on, btn) => `<${btn ? "button" : "span"} class="chip tch ${used(t) ? "live" : ""}" ${btn ? `data-w="tch" data-i="${i}" data-t="${esc(t)}"` : ""} aria-pressed="${on}" title="${used(t) ? (TI4.TECH_ARBITER[t] ? "Used by the Battle Arbiter" : "Used by the Council Chamber") : ""}">${esc(t)}</${btn ? "button" : "span"}>`;
+      return `<div class="wz-trow" style="--c:${c.h}">${tok({...p, id:"w" + i})}<div><b>${esc(p.name || "Player " + (i + 1))}</b><span>${esc(p.faction)}</span></div><div class="chips">${
+        fixed.length ? fixed.map(t => chip(t, true, false)).join("") : ch ? "" : `<span class="hint">No starting technologies</span>`}${
+        ch ? `<span class="hint">Choose ${ch.n}:</span>` + ch.from.map(t => chip(t, pick.includes(t), true)).join("") : ""}</div></div>`; }).join("") +
+    `</div><p class="hint">Highlighted technologies change battles or votes. The rest are listed so the table can check their sheets.</p>`;
+}
+function gmSeed(players){
+  if (!GM) return;
+  const p = {};
+  players.forEach((pl, i) => { const id = fidOf(pl.faction), names = (TI4.START[id] || []).concat(W.choice[i] || []);
+    p[pl.id] = {start:names, techs:names.map(t => TI4.TECH_ARBITER[t]).filter(Boolean), upg:[], flags:{},
+      votes:Object.fromEntries(names.filter(t => TI4.TECH_COUNCIL[t]).map(t => [TI4.TECH_COUNCIL[t], true]))}; });
+  TI4.profiles.reset(S.gid, p);
+  TI4.options.write(W.opt || {});
 }
 function wizOK(){
   if (W.step !== 1) return {ok:true};
@@ -2056,7 +2092,8 @@ function drawWizard(){
     h += `<h2 class="wz-h">New game</h2><p class="wz-sub">Five quick steps. The tool will track objectives, points, turns and time from the first reveal to the winner.</p>
 <div class="wz-sec"><h3>How many players?</h3><div class="chips wz-big">${[3,4,5,6,7,8].map(k => `<button class="chip" data-w="n" data-v="${k}" aria-pressed="${W.n === k}">${k}</button>`).join("")}</div>${W.n <= 4 ? `<p class="hint">With ${W.n} players, everyone picks 2 strategy cards each round.</p>` : ""}</div>
 <div class="wz-sec"><h3>Victory points to win</h3><div class="chips wz-big"><button class="chip" data-w="goal" data-v="10" aria-pressed="${W.goal === 10}">10 VP · standard</button><button class="chip" data-w="goal" data-v="14" aria-pressed="${W.goal === 14}">14 VP · long game</button></div></div>
-<div class="wz-sec"><h3>Options</h3><div class="chips"><button class="chip" data-w="omega" aria-pressed="${W.omega}">Use Codex Ω secret objectives</button><button class="chip" data-w="clock" aria-pressed="${W.clock}">Start the game clock when the game begins</button></div></div>`;
+<div class="wz-sec"><h3>Options</h3><div class="chips"><button class="chip" data-w="omega" aria-pressed="${W.omega}">Use Codex Ω secret objectives</button><button class="chip" data-w="clock" aria-pressed="${W.clock}">Start the game clock when the game begins</button></div></div>` +
+    (GM ? `<div class="wz-sec"><h3>Table options</h3><p class="hint" style="margin:0 0 10px">For the Battle Arbiter and the Council Chamber. Change them any time from Game setup.</p><div class="chips">${[["sound","Battle sound effects"],["fast","Fast battle animations"],["quick","Auto-advance rule tips in battles"],["motion","Animated agenda reveals"]].map(([k, l]) => `<button class="chip" data-w="opt" data-k="${k}" aria-pressed="${!!W.opt[k]}">${l}</button>`).join("")}</div></div>` : "");
   }
   if (s === 1) {
     h += `<h2 class="wz-h">Who's playing?</h2><p class="wz-sub">Enter players in seating order, going clockwise around the table. Seat order sets the strategy card draft.</p><div class="wz-players">` +
@@ -2076,6 +2113,7 @@ function drawWizard(){
   }
   if (s === 3) {
     const T = [["Build the galaxy","Place Mecatol Rex in the center with the custodians token on it, then each player's home system and the remaining system tiles."],["Faction sheets and starting units","Each player takes their faction sheet, places starting units in their home system and takes their starting technologies."],["Command tokens","Each player puts 3 tokens in the tactic pool, 3 in the fleet pool and 2 in the strategy pool."],["Shuffle the decks","Shuffle the action, agenda, exploration and relic fragment decks, and the secret objectives."],["Promissory notes and leaders","Each player takes their promissory notes, and their agent, commander and hero."],["Trade goods and commodities","Everyone starts with no trade goods and no commodities."]];
+    if (GM) h += wizTechHTML(ps);
     h += `<h2 class="wz-h">Set up the table</h2><p class="wz-sub">Work through the physical setup together. Tick each step off as you go. This is a guide only, and nothing here is required to continue.</p><ol class="checks">` +
       T.map(([t, d], i) => `<li class="ck ${W.checks[i] ? "done" : ""}"><button class="box" data-w="check" data-i="${i}" aria-pressed="${!!W.checks[i]}" aria-label="${t} done">${W.checks[i] ? "✓" : ""}</button><div class="tx"><b>${i + 1}. ${t}</b><span>${d}</span></div><span></span></li>`).join("") + `</ol>`;
   }
@@ -2105,6 +2143,8 @@ $("wizard").addEventListener("click", e => {
   else if (a === "speaker") W.speaker = i;
   else if (a === "randspeaker") { let k = 0; const end = Math.floor(Math.random() * W.n), spins = W.n * 2 + end; const iv = setInterval(() => { W.speaker = k % W.n; drawWizard(); if (++k > spins) clearInterval(iv); }, 90); return; }
   else if (a === "check") W.checks[i] = !W.checks[i];
+  else if (a === "opt") { const k = b.dataset.k; W.opt[k] = !W.opt[k]; }
+  else if (a === "tch") { const t = b.dataset.t, ch = TI4.CHOOSE[fidOf(W.players[i].faction)], cur = W.choice[i] || []; W.choice[i] = cur.includes(t) ? cur.filter(x => x !== t) : (cur.length < (ch ? ch.n : 1) ? [...cur, t] : [...cur.slice(1), t]); }
   else if (a === "back") { W.step--; W.pick = -1; }
   else if (a === "cancel") { close("wizard"); return; }
   else if (a === "next") { if (W.step === 2 && W.speaker < 0) W.speaker = 0; W.step++; W.pick = -1; }
@@ -2115,6 +2155,7 @@ function startFromWizard(){
   undoStack.push(JSON.stringify(S));
   const players = W.players.slice(0, W.n).map((p, i) => ({id:"p" + (i + 1) + uid().slice(0, 3), name:p.name.trim(), faction:p.faction, color:p.color, hand:1}));
   S = blank(players); S.goal = W.goal; S.omega = W.omega;
+  gmSeed(players);
   S.g.speaker = players[Math.max(0, W.speaker)].id;
   if (W.clock) S.g.clock.since = Date.now();
   S.g.phase = "strategy"; S.g.active = picker(); S.g.turnStart = W.clock ? Date.now() : null;
@@ -2131,6 +2172,7 @@ setView("round");
 /* GameMaster: runs after the award dialog's own handler, so Undo brings the Council result back */
 $("awGo").addEventListener("click", () => { if (AWREF) { const r = AWREF; AWREF = null; markDone(r); save(); render(); } });
 if (GM) {
+  document.body.classList.add("gm");
   publishTable(); ingestBattles();
   TI4.on("outbox", () => { ingestBattles(); render(); });
   TI4.on("shell:shown", m => { if (m.tool === "ledger") { ingestBattles(); render(); } });
