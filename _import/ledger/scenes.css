@@ -1,0 +1,73 @@
+.sc [class^="a-"],.sc [class*=" a-"]{transform-box:fill-box}
+.sc .a-pulse{animation:aPulse 3s ease-in-out infinite}
+@keyframes aPulse{50%{opacity:.3}}
+.sc .a-bob{animation:aBob 5s ease-in-out infinite}
+@keyframes aBob{50%{transform:translateY(-7px)}}
+.sc .a-spin{transform-origin:center;animation:aSpin 30s linear infinite}
+.sc .a-spin.rev{animation-direction:reverse}
+@keyframes aSpin{to{transform:rotate(360deg)}}
+.sc .a-grow{transform-origin:center;animation:aGrow 4s ease-in-out infinite}
+@keyframes aGrow{50%{transform:scale(1.08);opacity:.6}}
+.sc .a-ping{transform-origin:center;animation:aPing 2.6s ease-out infinite}
+@keyframes aPing{from{transform:scale(.6);opacity:.9}to{transform:scale(2.4);opacity:0}}
+.sc .a-shot{animation:aShot 2.4s linear infinite;opacity:0}
+@keyframes aShot{8%,26%{opacity:1}34%{opacity:0}}
+.sc .a-dash{stroke-dasharray:5 7;animation:aDash 1.8s linear infinite}
+@keyframes aDash{to{stroke-dashoffset:-24}}
+.sc .a-flick{animation:aFlick .35s steps(2) infinite alternate}
+@keyframes aFlick{to{opacity:.45}}
+.sc .a-wave{transform-origin:left center;animation:aWave 1.6s ease-in-out infinite alternate}
+@keyframes aWave{to{transform:skewY(-10deg) scaleX(.9)}}
+.sc .a-fly{animation:aFly 4s ease-in-out infinite;opacity:0}
+@keyframes aFly{0%{transform:translate(0,0);opacity:0}12%{opacity:1}80%{opacity:1}100%{transform:translate(var(--fx),var(--fy));opacity:0}}
+.sc .a-pop{transform-origin:center bottom;animation:aPop 6s ease-out infinite;transform:scale(0)}
+@keyframes aPop{0%,6%{transform:scale(0)}14%,92%{transform:scale(1)}100%{transform:scale(0)}}
+.sc .a-boom{animation:aBoom 2.4s ease-out infinite;opacity:0}
+@keyframes aBoom{0%{transform:scale(.2);opacity:0}8%{opacity:1}45%{transform:scale(1.15);opacity:0}100%{opacity:0}}
+.sc .a-spark{animation:aBoom 1.4s ease-out infinite}
+.sc .a-fall{animation:aFall 2.4s ease-in infinite}
+@keyframes aFall{0%,25%{transform:none;opacity:1}60%,100%{transform:translateY(16px) rotate(70deg);opacity:0}}
+.sc .a-hitout{animation:aHit 2.4s linear infinite}
+@keyframes aHit{0%,30%{opacity:1}36%{opacity:0}92%{opacity:0}100%{opacity:1}}
+.sc .a-tatter{transform-origin:left center;animation:aWave .7s ease-in-out infinite alternate}
+.sc .a-drift-r{transform-origin:center;animation:aDriftR 7s linear infinite}
+@keyframes aDriftR{to{transform:translate(18px,-10px) rotate(360deg)}}
+.sc .a-sand{transform-origin:center bottom;animation:aSand 6s linear infinite}
+@keyframes aSand{to{transform:scale(.15)}}
+.sc .a-look{animation:aLook 5s ease-in-out infinite}
+@keyframes aLook{25%{transform:translateX(-26px)}60%{transform:translateX(26px)}}
+.sc .a-burn,.sc .a-burnup{animation:aBurn 3s ease-in infinite}
+@keyframes aBurn{0%,20%{transform:none;opacity:1}100%{transform:translateY(-40px) scale(.6);opacity:0}}
+.sc .a-stomp{animation:aStomp 1.6s ease-in-out infinite}
+@keyframes aStomp{50%{transform:translateY(-6px)}}
+.sc .a-raise{transform-origin:center bottom;animation:aRaise 2s ease-in-out infinite alternate}
+@keyframes aRaise{from{transform:scaleY(.3)}}
+.sc .a-gavel{animation:aGavel 1.8s ease-in infinite}
+@keyframes aGavel{0%,60%{transform:rotate(-28deg)}75%{transform:rotate(6deg)}100%{transform:rotate(-28deg)}}
+.sc .a-exhaust{transform-origin:center;animation:aExh 4s ease-in-out infinite}
+@keyframes aExh{0%,30%{transform:none;opacity:1}55%,85%{transform:rotate(90deg) scale(.85);opacity:.5}100%{transform:none;opacity:1}}
+.sc .a-ready{transform-origin:center;animation:aReady 3.5s ease-in-out infinite}
+@keyframes aReady{0%,25%{transform:rotate(90deg);opacity:.55}50%,90%{transform:none;opacity:1}100%{transform:rotate(90deg);opacity:.55}}
+.sc .cam{transform-origin:240px 135px;transform-box:view-box;animation:aCam 18s ease-in-out infinite alternate}
+@keyframes aCam{to{transform:scale(1.07)}}
+.sc .a-rays{animation:aRays 9s ease-in-out infinite alternate}
+@keyframes aRays{from{opacity:.55}to{opacity:1}}
+.sc .a-sweep{transform-box:view-box;animation:aSweep 11s ease-in-out infinite}
+@keyframes aSweep{0%,62%{transform:rotate(18deg) translateX(0)}82%,100%{transform:rotate(18deg) translateX(720px)}}
+.sc .a-light{animation:aLight 4s ease-in-out infinite;opacity:.15}
+@keyframes aLight{30%,60%{opacity:1}}
+.sc .a-scan{transform-origin:0 0;transform-box:view-box;animation:aScan 4s ease-in-out infinite alternate}
+@keyframes aScan{from{transform:rotate(-14deg)}to{transform:rotate(14deg)}}
+.sc .a-flipcard{animation:aFlipC 3.2s ease-in-out infinite}
+@keyframes aFlipC{0%,30%{transform:scaleX(1)}45%{transform:scaleX(0)}60%,100%{transform:scaleX(1)}}
+@keyframes aPath{from{offset-distance:0%}to{offset-distance:100%}}
+.still .sc *{animation:none!important}
+.still .sc .a-light{opacity:.8}
+.still .sc .a-sweep{display:none}
+.still .sc .a-fly,.still .sc .a-shot,.still .sc .a-boom{opacity:1}
+.still .sc .a-pop{transform:none}
+@media (prefers-reduced-motion:reduce){.sc *{animation:none!important}}
+
+.obj-art .sc .cam,.dk .sc .cam{animation:none}
+.obj-art .sc .a-sweep,.dk .sc .a-sweep,.obj-art .sc .a-rays{animation:none}
+.obj-art .sc .a-sweep{display:none}
