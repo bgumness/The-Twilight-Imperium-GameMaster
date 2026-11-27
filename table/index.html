@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Table screen · GameMaster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;600;700;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--void:#02040a;--ink:#eef2fa;--soft:#c3cad8;--dim:#7f89a0;--line:rgba(170,200,255,.12);--gold:#e8c36a;--gold2:#f6dfa0;--cyan:#8be6e2;--ember:#ff7a52;--violet:#b48cff;
+  --display:"Oxanium",system-ui,sans-serif;--body:"Barlow",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;--u:min(1vw,1.78vh)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--void);color:var(--ink);font-family:var(--body);overflow:hidden}
+body{background:
+  radial-gradient(60% 50% at 85% 0%,rgba(110,80,220,.20),transparent 70%),
+  radial-gradient(50% 45% at 0% 100%,rgba(30,140,170,.16),transparent 70%),
+  radial-gradient(40% 35% at 50% 55%,rgba(232,195,106,.05),transparent 70%),var(--void)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.55;
+  background-image:radial-gradient(1px 1px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 72% 34%,#cfe8ff,transparent),radial-gradient(1.4px 1.4px at 40% 80%,#fff,transparent),radial-gradient(1px 1px at 88% 72%,#ffe9c0,transparent),radial-gradient(1px 1px at 28% 52%,#fff,transparent),radial-gradient(1.2px 1.2px at 58% 12%,#fff,transparent),radial-gradient(1px 1px at 6% 86%,#cfe8ff,transparent),radial-gradient(1px 1px at 94% 40%,#fff,transparent);
+  background-size:620px 520px}
+.screen{position:relative;height:100%;display:grid;grid-template-rows:auto 1fr auto;gap:calc(var(--u)*1.6);padding:calc(var(--u)*2.2) calc(var(--u)*3)}
+
+/* top band */
+.top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:calc(var(--u)*3)}
+.round{display:flex;align-items:baseline;gap:calc(var(--u)*1.4)}
+.round .lbl{font:600 calc(var(--u)*1.3) var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+.round .rn{font:800 calc(var(--u)*6.2)/.9 var(--display);letter-spacing:.06em;background:linear-gradient(180deg,#fff,#f0d79a 55%,#b98a35);-webkit-background-clip:text;background-clip:text;color:transparent}
+.phase{display:flex;flex-direction:column;gap:calc(var(--u)*.5)}
+.phase b{font:700 calc(var(--u)*2.4) var(--display);letter-spacing:.2em;text-transform:uppercase}
+.phase span{font:500 calc(var(--u)*1.5) var(--body);color:var(--soft)}
+.phase .now{color:var(--cyan)}
+.phases{display:flex;gap:calc(var(--u)*.6);margin-top:calc(var(--u)*.4)}
+.phases i{width:calc(var(--u)*5);height:calc(var(--u)*.45);border-radius:9px;background:rgba(255,255,255,.08)}
+.phases i.on{background:var(--cyan);box-shadow:0 0 12px var(--cyan)}.phases i.done{background:rgba(139,230,226,.35)}
+.speaker{display:flex;align-items:center;gap:calc(var(--u)*1.2)}
+.speaker svg{width:calc(var(--u)*7);height:auto;filter:drop-shadow(0 6px 18px rgba(200,30,30,.35))}
+.speaker .who{text-align:right}.speaker .who small{display:block;font:500 calc(var(--u)*1.1) var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.speaker .who b{font:700 calc(var(--u)*2) var(--display);letter-spacing:.06em}
+
+/* body */
+.main{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:calc(var(--u)*2.4);min-height:0}
+.panel{border:1px solid var(--line);border-radius:calc(var(--u)*1.6);background:linear-gradient(180deg,rgba(12,18,34,.78),rgba(5,8,16,.86));padding:calc(var(--u)*1.6) calc(var(--u)*1.8);min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.panel h2{margin:0 0 calc(var(--u)*1.2);font:700 calc(var(--u)*1.25) var(--display);letter-spacing:.24em;text-transform:uppercase;color:var(--gold);display:flex;justify-content:space-between}
+.panel h2 span{color:var(--dim);font-family:var(--mono);letter-spacing:.1em}
+
+.track{--s:1;display:grid;gap:calc(var(--u)*.9*var(--s));flex:1;align-content:start}
+.lane{display:grid;grid-template-columns:calc(var(--u)*5.2*var(--s)) minmax(calc(var(--u)*14*var(--s)),.8fr) 3fr calc(var(--u)*7*var(--s));align-items:center;gap:calc(var(--u)*1.4*var(--s));
+  padding:calc(var(--u)*.7*var(--s)) calc(var(--u)*1.1*var(--s));border-radius:calc(var(--u)*1.2*var(--s));background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);transition:transform .6s cubic-bezier(.2,.8,.15,1)}
+.lane.lead{background:linear-gradient(90deg,rgba(232,195,106,.13),rgba(255,255,255,.02));border-color:rgba(232,195,106,.35)}
+.lane.active{box-shadow:0 0 0 2px rgba(139,230,226,.55),0 0 30px rgba(139,230,226,.2)}
+.lane img{width:calc(var(--u)*5.2*var(--s));height:calc(var(--u)*5.2*var(--s));border-radius:50%;border:calc(var(--u)*.32*var(--s)) solid var(--c);background:#0b1224;object-fit:contain;padding:calc(var(--u)*.55*var(--s));box-shadow:0 0 calc(var(--u)*1.6*var(--s)) color-mix(in srgb,var(--c) 45%,transparent)}
+.lane .nm b{display:block;font:700 calc(var(--u)*2.1*var(--s))/1.05 var(--display);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lane .nm span{font:500 calc(var(--u)*1.25*var(--s)) var(--body);color:var(--dim);white-space:nowrap}
+.cells{display:grid;gap:calc(var(--u)*.35*var(--s))}
+.cells i{height:calc(var(--u)*2.4*var(--s));border-radius:calc(var(--u)*.45*var(--s));background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06)}
+.cells i.f{background:linear-gradient(180deg,color-mix(in srgb,var(--c) 85%,#fff),var(--c));border-color:transparent;box-shadow:0 0 calc(var(--u)*1*var(--s)) color-mix(in srgb,var(--c) 50%,transparent)}
+.cells i.goal{border-color:rgba(232,195,106,.7)}
+.lane .vp{font:800 calc(var(--u)*4.2*var(--s))/1 var(--display);text-align:right;color:var(--gold2);text-shadow:0 0 calc(var(--u)*2*var(--s)) rgba(232,195,106,.35)}
+.lane .vp small{display:block;white-space:nowrap;font:500 calc(var(--u)*.95*var(--s)) var(--mono);letter-spacing:.06em;color:var(--dim);text-shadow:none;margin-top:calc(var(--u)*.3*var(--s))}
+
+.side{display:grid;grid-template-rows:minmax(0,1.6fr) minmax(0,1fr);gap:calc(var(--u)*2);min-height:0}
+.obj{display:grid;gap:calc(var(--u)*.7);overflow:hidden}
+.o{display:grid;grid-template-columns:auto 1fr auto;gap:calc(var(--u)*1);align-items:center;padding:calc(var(--u)*.7) calc(var(--u)*.9);border-radius:calc(var(--u)*.9);background:rgba(255,255,255,.03);border-left:calc(var(--u)*.35) solid var(--s)}
+.o[data-s="1"]{--s:#e8c36a}.o[data-s="2"]{--s:#6fa8ff}.o[data-s="S"]{--s:#b48cff}
+.o .st{font:700 calc(var(--u)*1.05) var(--mono);color:var(--s);letter-spacing:.08em}
+.o b{font:600 calc(var(--u)*1.55)/1.15 var(--body)}
+.dots{display:flex;gap:calc(var(--u)*.3)}
+.dots img{width:calc(var(--u)*2.2);height:calc(var(--u)*2.2);border-radius:50%;border:calc(var(--u)*.2) solid var(--c);background:#0b1224;object-fit:contain;padding:calc(var(--u)*.25)}
+.laws{display:grid;gap:calc(var(--u)*.7);overflow:hidden}
+.law{padding:calc(var(--u)*.7) calc(var(--u)*1);border-radius:calc(var(--u)*.9);background:linear-gradient(90deg,rgba(232,195,106,.10),transparent);border:1px solid rgba(232,195,106,.2)}
+.law b{font:700 calc(var(--u)*1.5) var(--display);letter-spacing:.06em}
+.law span{display:block;font:500 calc(var(--u)*1.2) var(--body);color:var(--soft)}
+.none{color:var(--dim);font:500 calc(var(--u)*1.35) var(--body)}
+
+/* bottom ticker */
+.foot{display:flex;align-items:center;gap:calc(var(--u)*1.6);font:500 calc(var(--u)*1.4) var(--body);color:var(--soft);min-height:calc(var(--u)*3)}
+.foot .tagx{font:700 calc(var(--u)*1.05) var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ember);padding:calc(var(--u)*.4) calc(var(--u)*.9);border:1px solid rgba(255,122,82,.5);border-radius:99px}
+.foot .brand{margin-left:auto;font:600 calc(var(--u)*1) var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+
+.wait[hidden],.screen[hidden]{display:none!important}
+.wait{position:fixed;inset:0;display:grid;place-items:center;text-align:center;padding:24px}
+.wait b{display:block;font:700 calc(var(--u)*3) var(--display);letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px}
+.wait p{color:var(--soft);font-size:calc(var(--u)*1.6);max-width:40em;margin:0 auto}
+.fs{position:fixed;left:50%;transform:translateX(-50%);top:10px;height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:rgba(10,15,30,.8);color:var(--soft);font:600 11px var(--display);letter-spacing:.16em;text-transform:uppercase;cursor:pointer;opacity:.45}.fs:hover{opacity:1}
+:fullscreen .fs{display:none}
+
+/* narrow fallback (phone or portrait) */
+@media (max-aspect-ratio:1/1){
+  :root{--u:1.9vw}
+  html,body{overflow:auto}
+  .screen{height:auto;min-height:100%}
+  .main{grid-template-columns:1fr}
+  .side{grid-template-rows:auto auto}
+  .lane{grid-template-columns:calc(var(--u)*5.2) 1fr calc(var(--u)*5.6)}.lane .cells{grid-column:1/-1;grid-row:2}
+}
+</style>
+</head>
+<body>
+<div class="screen" id="screen" hidden>
+  <div class="top">
+    <div class="round"><span class="lbl">Round</span><span class="rn" id="rn">I</span></div>
+    <div class="phase"><b id="ph">Strategy phase</b><span id="phsub"></span><div class="phases" id="phases"></div></div>
+    <div class="speaker" id="spk"></div>
+  </div>
+  <div class="main">
+    <div class="panel"><h2>Path to victory <span id="goal"></span></h2><div class="track" id="track"></div></div>
+    <div class="side">
+      <div class="panel"><h2>Public objectives <span id="objn"></span></h2><div class="obj" id="obj"></div></div>
+      <div class="panel"><h2>Laws in force</h2><div class="laws" id="laws"></div></div>
+    </div>
+  </div>
+  <div class="foot" id="foot"></div>
+</div>
+<div class="wait" id="wait"><div><b>Waiting for the game</b><p>Keep this window open on the TV. It follows the game running in the Ledger on this device, so set up or continue a game in the other window.</p></div></div>
+<button class="fs" id="fs">Full screen</button>
+
+<script src="../shared/factions.js"></script>
+<script src="../shared/bus.js"></script>
+<script src="../shared/table.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const read = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+  const em = fid => { const f = TI4.faction(fid); return f && f.art.emblem ? '../' + f.art.emblem : ''; };
+  const fname = fid => { const f = TI4.faction(fid); return f ? f.name.replace(/^The /, '') : ''; };
+  const col = c => TI4.COLORS[c] || '#888';
+  const ROMAN = n => ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][n] || String(n);
+  const PH = ['strategy', 'action', 'status', 'agenda'], PHN = { strategy: 'Strategy phase', action: 'Action phase', status: 'Status phase', agenda: 'Agenda phase' };
+  const SPEAKER = `<svg viewBox="0 0 120 104"><defs><linearGradient id="en" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2424a"/><stop offset="1" stop-color="#8e1218"/></linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2f4f8"/><stop offset=".5" stop-color="#8d939f"/><stop offset="1" stop-color="#d8dbe2"/></linearGradient></defs>
+    <polygon points="30,2 90,2 118,52 90,102 30,102 2,52" fill="url(#rim)"/><polygon points="34,10 86,10 110,52 86,94 34,94 10,52" fill="url(#en)"/>
+    <polygon points="34,10 86,10 110,52 86,94 34,94 10,52" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.5"/>
+    <text x="60" y="58" text-anchor="middle" font-family="Oxanium" font-weight="800" font-size="15" letter-spacing="2" fill="#f4f5f8">SPEAKER</text></svg>`;
+
+  function draw() {
+    const b = read('ti4gm:board'), t = TI4.table.read();
+    const ok = b && b.players && b.players.length && (!t || t.gid === b.gid);
+    $('screen').hidden = !ok; $('wait').hidden = !!ok;
+    if (!ok) return;
+    const by = Object.fromEntries(b.players.map(p => [p.id, p]));
+    $('rn').textContent = ROMAN(b.round);
+    const pi = PH.indexOf(b.phase);
+    $('ph').textContent = PHN[b.phase] || 'Setup';
+    const act = b.active && by[b.active];
+    $('phsub').innerHTML = act ? `<span class="now">Now playing: ${esc(act.name)}</span> · ${esc(fname(act.faction))}` : (b.sample ? 'Sample game' : '');
+    $('phases').innerHTML = PH.map((k, i) => `<i class="${i === pi ? 'on' : i < pi ? 'done' : ''}"></i>`).join('');
+    const sp = b.speaker && by[b.speaker];
+    $('spk').innerHTML = sp ? `<div class="who"><small>Speaker</small><b>${esc(sp.name)}</b></div>${SPEAKER}` : '';
+    // score track
+    const goal = b.goal || 10, rows = b.players.slice().sort((x, y) => y.total - x.total), top = rows[0] ? rows[0].total : 0;
+    $('goal').textContent = 'first to ' + goal;
+    $('track').style.setProperty('--s', rows.length <= 4 ? 1 : Math.max(.52, 4.2 / rows.length).toFixed(3));
+    $('track').innerHTML = rows.map(p => {
+      const cells = Array.from({ length: goal }, (_, i) => `<i class="${i < p.total ? 'f' : ''} ${i === goal - 1 ? 'goal' : ''}"></i>`).join('');
+      return `<div class="lane ${p.total === top && top > 0 ? 'lead' : ''} ${p.id === b.active ? 'active' : ''}" style="--c:${col(p.color)}">
+        <img src="${em(p.faction)}" alt=""><div class="nm"><b>${esc(p.name)}</b><span>${esc(fname(p.faction))}</span></div>
+        <div class="cells" style="grid-template-columns:repeat(${goal},1fr)">${cells}</div>
+        <div class="vp">${p.total}<small>${p.pub} · ${p.sec} · ${p.oth}</small></div></div>`;
+    }).join('');
+    // objectives
+    const pubs = b.publics || [];
+    $('objn').textContent = pubs.length ? pubs.length + ' revealed' : '';
+    $('obj').innerHTML = pubs.length ? pubs.map(o => `<div class="o" data-s="${o.stage}"><span class="st">${o.stage === 'S' ? 'SECRET' : o.stage === 2 ? 'II' : 'I'} · ${o.pts}</span><b>${esc(o.name)}</b>
+        <span class="dots">${o.by.map(id => by[id] ? `<img src="${em(by[id].faction)}" alt="" style="--c:${col(by[id].color)}" title="${esc(by[id].name)}">` : '').join('')}</span></div>`).join('')
+      : '<div class="none">No objectives revealed yet.</div>';
+    // laws
+    const L = read('ti4gm:laws'), laws = L && L.gid === b.gid ? L.laws : [];
+    $('laws').innerHTML = laws.length ? laws.map(l => `<div class="law"><b>${esc(l.name)}</b>${l.holder ? `<span>${esc(l.holder)}</span>` : ''}</div>`).join('') : '<div class="none">No laws in force.</div>';
+    // ticker
+    $('foot').innerHTML = (b.battle ? `<span class="tagx">Last battle · R${b.battle.round}</span><span>${esc(b.battle.text)}</span>` : '') + `<span class="brand">GameMaster · Table screen</span>`;
+  }
+  ['board', 'table', 'laws'].forEach(e => TI4.on(e, draw));
+  addEventListener('storage', e => { if (e.key && e.key.startsWith('ti4gm:')) draw(); });
+  setInterval(draw, 5000);
+  draw();
+
+  $('fs').onclick = () => document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(() => {});
+  /* keep the TV awake while this is open */
+  async function wake() { try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch (e) {} }
+  wake(); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') wake(); });
+})();
+</script>
+</body>
+</html>

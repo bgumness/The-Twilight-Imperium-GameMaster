@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GameMaster · Twilight Imperium companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;500;600;700;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#03050b; --ink:#e9eef7; --soft:#c3cad8; --dim:#8d97ab; --line:rgba(170,200,255,.12);
+  --gold:#e8c36a; --gold2:#f6dfa0; --cyan:#8be6e2; --ember:#ff7a52; --violet:#b48cff;
+  --display:"Oxanium",system-ui,sans-serif; --body:"Barlow",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--void);color:var(--ink);font:16px/1.55 var(--body);overflow-x:hidden}
+button{font:inherit;color:inherit}
+a{color:var(--cyan)}
+
+/* ---------- sky ---------- */
+#sky{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.nebula{position:fixed;inset:-20%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(40% 35% at 78% 22%,rgba(120,80,220,.22),transparent 70%),
+    radial-gradient(35% 30% at 15% 70%,rgba(30,140,170,.16),transparent 70%),
+    radial-gradient(30% 25% at 60% 85%,rgba(230,120,60,.10),transparent 70%);
+  animation:drift 60s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate3d(-3%,2%,0) scale(1.05)}}
+main{position:relative;z-index:1}
+
+/* ---------- hero ---------- */
+.hero{min-height:min(100vh,980px);display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:center;gap:clamp(20px,4vw,70px);
+  padding:clamp(28px,5vw,80px) clamp(20px,6vw,110px) clamp(40px,6vw,90px);max-width:1680px;margin:0 auto}
+.eyebrow{font:500 12px/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+.hero h1{margin:14px 0 10px;font:800 clamp(52px,8.2vw,148px)/.9 var(--display);letter-spacing:.06em;text-transform:uppercase;
+  background:linear-gradient(180deg,#fff 0%,#f6e7c0 45%,#c9963e 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 40px rgba(232,195,106,.25))}
+.hero .lede{font-size:clamp(17px,1.45vw,22px);color:var(--soft);max-width:34em;margin:0 0 26px}
+.hero .lede b{color:var(--ink);font-weight:600}
+
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:22px}
+.btn{height:50px;padding:0 24px;border-radius:14px;border:1px solid var(--line);background:rgba(12,18,34,.7);cursor:pointer;
+  font:700 13px var(--display);letter-spacing:.16em;text-transform:uppercase;transition:transform .15s,box-shadow .2s,background .2s;backdrop-filter:blur(6px)}
+.btn:hover{transform:translateY(-1px);border-color:rgba(232,195,106,.5)}
+.btn.primary{border:0;color:#1a1204;background:linear-gradient(180deg,var(--gold2),var(--gold) 55%,#b98a35);box-shadow:0 10px 40px rgba(232,195,106,.35),inset 0 1px 0 rgba(255,255,255,.6)}
+.btn.primary:hover{box-shadow:0 14px 50px rgba(232,195,106,.5),inset 0 1px 0 rgba(255,255,255,.6)}
+.btn.ghost{background:transparent}
+.btn.sm{height:40px;padding:0 16px;font-size:11.5px;border-radius:11px}
+
+/* the game in progress */
+.current{border:1px solid rgba(232,195,106,.32);border-radius:20px;padding:18px 20px;background:linear-gradient(160deg,rgba(28,22,8,.55),rgba(8,12,24,.75));backdrop-filter:blur(8px);max-width:640px}
+.current .row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.current h2{margin:0;font:700 13px var(--display);letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.current .meta{font:500 12px var(--mono);color:var(--dim);letter-spacing:.06em}
+.seats{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.seat{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);font-size:14px}
+.seat img{width:30px;height:30px;border-radius:50%;border:2px solid var(--c);background:#0b1224;object-fit:contain;padding:3px}
+.seat b{font:700 15px var(--display);color:var(--gold2);margin-left:2px}
+.seat.lead{border-color:rgba(232,195,106,.55);box-shadow:0 0 18px rgba(232,195,106,.18)}
+
+/* Mecatol and the three stations */
+.orrery{position:relative;aspect-ratio:1;width:min(100%,640px);justify-self:center}
+.orrery svg{width:100%;height:100%;overflow:visible}
+.ring{fill:none;stroke:rgba(170,200,255,.18);stroke-width:1}
+.ring.dash{stroke-dasharray:2 7;stroke:rgba(139,230,226,.28)}
+.spin{transform-origin:300px 300px;animation:spin 90s linear infinite}
+.spin.r2{animation-duration:140s;animation-direction:reverse}
+.spin.r3{animation-duration:200s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.counter{transform-box:fill-box;transform-origin:center;animation:spin 90s linear infinite reverse}
+.r2 .counter{animation-duration:140s;animation-direction:normal}
+.r3 .counter{animation-duration:200s}
+.station text{font:700 13px var(--display);letter-spacing:.18em;fill:var(--ink);text-anchor:middle;text-transform:uppercase}
+@media (prefers-reduced-motion:reduce){.spin,.counter,.nebula{animation:none}}
+
+/* ---------- sections ---------- */
+section.band{max-width:1380px;margin:0 auto;padding:clamp(40px,6vw,90px) clamp(20px,5vw,60px)}
+.band>header{display:flex;align-items:end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:26px}
+.band h2{margin:6px 0 0;font:700 clamp(26px,2.6vw,40px)/1.05 var(--display);letter-spacing:.08em;text-transform:uppercase}
+.band header p{margin:8px 0 0;color:var(--soft);max-width:46em}
+.rule{height:1px;max-width:1380px;margin:0 auto;background:linear-gradient(90deg,transparent,var(--line) 20%,var(--line) 80%,transparent)}
+
+/* flow */
+.flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;position:relative}
+.stage{position:relative;border:1px solid var(--line);border-radius:22px;overflow:hidden;background:linear-gradient(180deg,rgba(14,20,38,.85),rgba(6,9,18,.9));min-height:100%}
+.stage .art{height:170px;position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.stage .art svg{position:absolute;inset:0;width:100%;height:100%}
+.stage .txt{padding:18px 20px 22px}
+.stage .num{font:600 11px var(--mono);letter-spacing:.14em;color:var(--t)}
+.stage h3{margin:6px 0 8px;font:700 20px var(--display);letter-spacing:.12em;text-transform:uppercase}
+.stage p{margin:0;color:var(--soft);font-size:15px}
+.stage .when{margin-top:12px;font:500 12.5px var(--mono);color:var(--t);letter-spacing:.04em}
+.stage[data-t="ledger"]{--t:var(--cyan)}.stage[data-t="council"]{--t:var(--gold)}.stage[data-t="arbiter"]{--t:var(--ember)}
+.stage::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:inset 0 1px 0 color-mix(in srgb,var(--t) 40%,transparent)}
+
+/* season */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.kpi{border:1px solid var(--line);border-radius:18px;padding:16px 18px;background:rgba(10,15,30,.7)}
+.kpi b{display:block;font:700 clamp(28px,2.6vw,40px)/1 var(--display);color:var(--gold2)}
+.kpi span{display:block;margin-top:6px;font:500 11.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.kpi small{display:block;margin-top:4px;color:var(--soft);font-size:13.5px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px}
+.panel{border:1px solid var(--line);border-radius:20px;background:rgba(8,12,24,.78);padding:18px 18px 10px;min-width:0}
+.panel h3{margin:0 0 12px;font:700 13px var(--display);letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--dim);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.04)}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.who{display:flex;align-items:center;gap:9px}
+.who img{width:26px;height:26px;border-radius:50%;border:2px solid var(--c,#555);background:#0b1224;object-fit:contain;padding:2px;flex:none}
+.bar{height:6px;border-radius:9px;background:rgba(255,255,255,.06);overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.champs{display:grid;gap:10px;margin-bottom:8px}
+.champ{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:10px 12px;border-radius:14px;background:linear-gradient(90deg,rgba(232,195,106,.09),transparent 70%);border:1px solid rgba(232,195,106,.18)}
+.champ img{width:46px;height:46px;border-radius:50%;border:2px solid var(--c);background:#0b1224;object-fit:contain;padding:4px}
+.champ b{font:700 16px var(--display);letter-spacing:.06em}
+.champ .sub{color:var(--dim);font-size:13px}
+.champ .vp{font:700 22px var(--display);color:var(--gold2)}
+.empty{border:1px dashed rgba(232,195,106,.3);border-radius:22px;padding:34px clamp(18px,4vw,44px);display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;background:rgba(20,16,8,.35)}
+.empty svg{width:clamp(90px,10vw,140px);height:auto}
+.empty h3{margin:0 0 6px;font:700 20px var(--display);letter-spacing:.1em;text-transform:uppercase}
+.empty p{margin:0;color:var(--soft)}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font:500 11px var(--mono);letter-spacing:.06em;background:rgba(255,255,255,.06);color:var(--soft)}
+
+/* table tools */
+.tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.tool{border:1px solid var(--line);border-radius:20px;padding:20px;background:rgba(10,15,30,.75);display:flex;flex-direction:column;gap:12px}
+.tool h3{margin:0;font:700 16px var(--display);letter-spacing:.14em;text-transform:uppercase}
+.tool p{margin:0;color:var(--soft);font-size:15px;flex:1}
+.tool .acts{display:flex;flex-wrap:wrap;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer;font:500 14px var(--body);color:var(--soft)}
+.chip[aria-pressed="true"]{border-color:rgba(139,230,226,.6);color:var(--ink);background:rgba(139,230,226,.12)}
+.chip[aria-pressed="true"]::before{content:"✓ ";color:var(--cyan)}
+.note{font:500 12.5px var(--mono);color:var(--dim)}
+
+footer{max-width:1380px;margin:0 auto;padding:30px clamp(20px,5vw,60px) 60px;color:var(--dim);font-size:13.5px;line-height:1.6}
+footer b{color:var(--soft)}
+
+/* responsive */
+@media (max-width:1000px){
+  .hero{grid-template-columns:1fr;min-height:auto;padding-top:24px}
+  .orrery{order:-1;width:min(78vw,420px);margin:-10px auto -30px}
+  .flow,.tools{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){
+  .btn{height:48px;padding:0 18px;flex:1 1 auto}
+  .empty{grid-template-columns:1fr;text-align:center}.empty svg{margin:0 auto}
+  td,th{padding:8px 5px}.hide-sm{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="sky" aria-hidden="true"></canvas><div class="nebula" aria-hidden="true"></div>
+<main>
+  <section class="hero">
+    <div>
+      <div class="eyebrow">A companion for Twilight Imperium · 4th Edition + Prophecy of Kings</div>
+      <h1>Game&shy;Master</h1>
+      <p class="lede">One screen runs game night. <b>The Ledger</b> keeps the round, objectives and score. When the agenda phase arrives, <b>the Council Chamber</b> rises to run the vote. When fleets collide, <b>the Battle Arbiter</b> resolves the combat. Set up once and everything stays in step.</p>
+      <div id="current"></div>
+      <div class="cta" id="cta"></div>
+      <div class="note">Saved in this browser on this device. No accounts, nothing sent anywhere.</div>
+    </div>
+    <div class="orrery" aria-hidden="true">
+      <svg viewBox="0 0 600 600">
+        <defs>
+          <radialGradient id="planet" cx="38%" cy="34%" r="70%"><stop offset="0" stop-color="#ffe7b0"/><stop offset=".25" stop-color="#d79a4a"/><stop offset=".6" stop-color="#6b3a1f"/><stop offset="1" stop-color="#14080a"/></radialGradient>
+          <radialGradient id="atmo" cx="50%" cy="50%" r="50%"><stop offset=".72" stop-color="rgba(255,190,110,0)"/><stop offset=".86" stop-color="rgba(255,190,110,.35)"/><stop offset="1" stop-color="rgba(255,190,110,0)"/></radialGradient>
+          <radialGradient id="shade" cx="72%" cy="70%" r="65%"><stop offset=".35" stop-color="rgba(0,0,0,0)"/><stop offset="1" stop-color="rgba(0,0,0,.85)"/></radialGradient>
+          <pattern id="lat" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M0 12h24" stroke="rgba(255,230,180,.08)"/></pattern>
+          <filter id="glow"><feGaussianBlur stdDeviation="6"/></filter>
+          <clipPath id="pc"><circle cx="300" cy="300" r="118"/></clipPath>
+        </defs>
+        <circle cx="300" cy="300" r="290" class="ring"/>
+        <circle cx="300" cy="300" r="230" class="ring dash"/>
+        <circle cx="300" cy="300" r="175" class="ring"/>
+        <circle cx="300" cy="300" r="150" fill="url(#atmo)"/>
+        <circle cx="300" cy="300" r="118" fill="url(#planet)"/>
+        <g clip-path="url(#pc)"><g class="spin r3"><rect x="150" y="150" width="300" height="300" fill="url(#lat)"/>
+          <path d="M200 270c40-18 70 8 110-6s60-30 100-10M190 330c50 10 80-14 120-2s70 20 110 4" stroke="rgba(255,225,170,.18)" stroke-width="7" fill="none" stroke-linecap="round"/></g></g>
+        <circle cx="300" cy="300" r="118" fill="url(#shade)"/>
+        <g opacity=".9"><polygon points="300,262 333,281 333,319 300,338 267,319 267,281" fill="none" stroke="rgba(255,240,200,.55)" stroke-width="1.5"/>
+          <circle cx="300" cy="300" r="5" fill="#fff3d2"/></g>
+        <!-- stations -->
+        <g class="spin"><g class="station" transform="translate(300 70)"><g class="counter">
+          <circle r="34" fill="#071018" stroke="#8be6e2" stroke-width="2"/><circle r="40" fill="none" stroke="#8be6e2" stroke-opacity=".3" filter="url(#glow)" stroke-width="6"/>
+          <path d="M0-16l4.7 9.6 10.6 1.5-7.7 7.4 1.8 10.5L0 8l-9.4 5 1.8-10.5-7.7-7.4 10.6-1.5z" fill="#8be6e2"/><text y="58">Ledger</text></g></g></g>
+        <g class="spin r2"><g class="station" transform="translate(500 415)"><g class="counter">
+          <circle r="34" fill="#150f05" stroke="#e8c36a" stroke-width="2"/><circle r="40" fill="none" stroke="#e8c36a" stroke-opacity=".3" filter="url(#glow)" stroke-width="6"/>
+          <path d="M-15 12h30M-12 12v-14M12 12v-14M-4 12v-10M4 12v-10M-17-3L0-15l17 12z" stroke="#e8c36a" stroke-width="2.4" fill="none" stroke-linejoin="round"/><text y="58">Council</text></g></g></g>
+        <g class="spin r3"><g class="station" transform="translate(100 415)"><g class="counter">
+          <circle r="34" fill="#170805" stroke="#ff7a52" stroke-width="2"/><circle r="40" fill="none" stroke="#ff7a52" stroke-opacity=".3" filter="url(#glow)" stroke-width="6"/>
+          <path d="M-13-13l26 26M13-13l-26 26M8 10l5 5 3-3-5-5M-8 10l-5 5-3-3 5-5" stroke="#ff7a52" stroke-width="2.6" fill="none" stroke-linecap="round"/><text y="58">Arbiter</text></g></g></g>
+      </svg>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+  <section class="band" id="flow">
+    <header><div><div class="eyebrow">How a game night flows</div><h2>Three tools, one game</h2><p>You mostly look at the Ledger. The other two appear when the game calls for them and step aside when they're done, carrying their results back to the score.</p></div></header>
+    <div class="flow">
+      <article class="stage" data-t="ledger">
+        <div class="art"><svg viewBox="0 0 400 170" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="lg1" x1="0" x2="1"><stop offset="0" stop-color="#0b2430"/><stop offset="1" stop-color="#071019"/></linearGradient></defs>
+          <rect width="400" height="170" fill="url(#lg1)"/>
+          <g stroke="rgba(139,230,226,.18)"><path d="M30 130H370M30 100H370M30 70H370M30 40H370"/></g>
+          <g font-family="Oxanium" font-size="10" fill="rgba(139,230,226,.6)"><text x="372" y="133">0</text><text x="372" y="43">10</text></g>
+          <path d="M40 128L100 120L160 104L220 96L280 72L340 50" stroke="#8be6e2" stroke-width="3" fill="none" filter="drop-shadow(0 0 6px #8be6e2)"/>
+          <path d="M40 128L100 126L160 114L220 108L280 100L340 86" stroke="#e8c36a" stroke-width="2.4" fill="none" opacity=".85"/>
+          <path d="M40 128L100 124L160 120L220 98L280 92L340 78" stroke="#b48cff" stroke-width="2.4" fill="none" opacity=".8"/>
+          <circle cx="340" cy="50" r="7" fill="#03050b" stroke="#8be6e2" stroke-width="3"/>
+          <g fill="rgba(255,255,255,.08)"><rect x="40" y="18" width="70" height="12" rx="3"/><rect x="118" y="18" width="70" height="12" rx="3"/><rect x="196" y="18" width="70" height="12" rx="3" fill="rgba(139,230,226,.35)"/></g>
+        </svg></div>
+        <div class="txt"><div class="num">01 · Every round</div><h3>The Ledger</h3><p>The round console walks the strategy, action, status and agenda phases. Objectives, secrets and every other point land on one big score track, with turn clocks and a full game log.</p><div class="when">Always on screen</div></div>
+      </article>
+      <article class="stage" data-t="council">
+        <div class="art"><svg viewBox="0 0 400 170" preserveAspectRatio="xMidYMid slice">
+          <defs><radialGradient id="cg" cx="50%" cy="20%" r="80%"><stop offset="0" stop-color="#3a2a0c"/><stop offset="1" stop-color="#0a0703"/></radialGradient></defs>
+          <rect width="400" height="170" fill="url(#cg)"/>
+          <path d="M200 -20L120 170M200 -20L280 170" stroke="rgba(246,223,160,.10)" stroke-width="40"/>
+          <g fill="none" stroke="#e8c36a" stroke-width="2"><path d="M110 150h180M125 150V95M275 150V95M155 150v-55M245 150v-55M185 150v-55M215 150v-55M100 95l100-55 100 55z"/></g>
+          <rect x="168" y="62" width="64" height="86" rx="6" fill="#120c03" stroke="#f6dfa0" stroke-width="1.5"/>
+          <path d="M200 78v20M190 88h20" stroke="#f6dfa0" stroke-width="2"/><g font-family="Oxanium" font-size="8" fill="#f6dfa0" text-anchor="middle"><text x="200" y="118">AGENDA</text><text x="200" y="132">FOR · AGAINST</text></g>
+        </svg></div>
+        <div class="txt"><div class="num">02 · Agenda phase</div><h3>The Council Chamber</h3><p>Reveals each agenda with its art and a plain explanation, runs the vote with every player's abilities, and keeps the laws in force. Points it awards come back to the Ledger for you to confirm.</p><div class="when">Rises when the agenda phase starts</div></div>
+      </article>
+      <article class="stage" data-t="arbiter">
+        <div class="art"><svg viewBox="0 0 400 170" preserveAspectRatio="xMidYMid slice">
+          <defs><radialGradient id="ag" cx="50%" cy="60%" r="70%"><stop offset="0" stop-color="#3a1408"/><stop offset="1" stop-color="#080303"/></radialGradient></defs>
+          <rect width="400" height="170" fill="url(#ag)"/>
+          <image href="../assets/units/dn.webp" x="40" y="44" width="110" height="80" opacity=".95"/>
+          <image href="../assets/units/ca.webp" x="252" y="56" width="100" height="64" opacity=".95" transform="scale(-1 1) translate(-604 0)"/>
+          <g stroke="#ff7a52" stroke-width="2" opacity=".9"><path d="M150 84L250 88" stroke-dasharray="6 6"/><path d="M150 96L248 76" stroke-dasharray="3 7" opacity=".6"/></g>
+          <circle cx="250" cy="88" r="16" fill="rgba(255,122,82,.25)" filter="blur(4px)"/>
+          <g font-family="JetBrains Mono" font-size="11" fill="#ffb39b"><text x="40" y="150">HIT 9 · 4 · 10</text><text x="270" y="150">SUSTAIN</text></g>
+        </svg></div>
+        <div class="txt"><div class="num">03 · Tactical action</div><h3>The Battle Arbiter</h3><p>Resolves space and ground combat in place of dice, with every faction's techs, upgrades and abilities. A battle display can go on the TV. The result goes into the game log.</p><div class="when">Rises from a combat step</div></div>
+      </article>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+  <section class="band" id="season">
+    <header><div><div class="eyebrow">Season</div><h2>The Galactic record</h2><p>Every finished game on this device: champions, who wins with what, and who never loses a battle.</p></div>
+      <div class="cta" style="margin:0"><button class="btn sm ghost" id="exportSeason">Save season file</button><button class="btn sm ghost" id="importSeasonBtn">Load season file</button><input type="file" id="importSeason" accept="application/json,.json" hidden></div></header>
+    <div id="seasonBody"></div>
+  </section>
+
+  <div class="rule"></div>
+  <section class="band" id="tools">
+    <header><div><div class="eyebrow">Around the table</div><h2>Screens and settings</h2></div></header>
+    <div class="tools">
+      <div class="tool"><h3>Table screen</h3><p>Open on a TV or second monitor. It shows the score track, round, speaker, objectives and laws, and updates live as the Ledger changes on this device.</p>
+        <div class="acts"><button class="btn sm" id="openTable">Open the table screen ↗</button><button class="btn sm ghost" id="openBattle">Battle display ↗</button></div></div>
+      <div class="tool"><h3>Table options</h3><p>Shared by all three tools. You can also change them during setup or from Game setup in the Ledger.</p>
+        <div class="chips" id="opts"></div></div>
+      <div class="tool"><h3>Saved games</h3><p>Copy the whole game to move it to another device, or paste one in, including games from the old Claude version of the Ledger.</p>
+        <div class="acts"><button class="btn sm" id="openSaves">Copy or load a game</button></div></div>
+    </div>
+  </section>
+
+  <footer>
+    <b>GameMaster</b> is fan-made, free and non-commercial. It is not affiliated with, endorsed or sponsored by Fantasy Flight Games or Asmodee. Twilight Imperium is a trademark of Fantasy Flight Games, and faction portraits are © Fantasy Flight Games. You need the board game to play.
+    Unit art is rendered from <a href="https://www.thingiverse.com/thing:4191414" target="_blank" rel="noopener">Twilight Imperium 4 ship models</a> by Saunick, CC BY. Objective and agenda scenes are original art made for this site.
+  </footer>
+</main>
+
+<script src="../shared/factions.js"></script>
+<script src="../shared/bus.js"></script>
+<script src="../shared/table.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const em = fid => { const f = TI4.faction(fid); return f && f.art.emblem ? '../' + f.art.emblem : ''; };
+  const fname = fid => { const f = TI4.faction(fid); return f ? f.name.replace(/^The /, '') : '—'; };
+  const col = c => TI4.COLORS[c] || '#888';
+  const read = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+  const PH = { strategy: 'Strategy phase', action: 'Action phase', status: 'Status phase', agenda: 'Agenda phase' };
+
+  /* ---- ask the Ledger to do something, even if it is still loading ---- */
+  function ledger(act) { TI4.pending.set('ledger', { act }); TI4.open('ledger'); }
+
+  /* ---- the game in progress ---- */
+  function drawCurrent() {
+    const b = read('ti4gm:board'), t = TI4.table.read();
+    const live = b && t && b.gid === t.gid && b.players && b.players.length;
+    if (!live) {
+      $('current').innerHTML = '';
+      $('cta').innerHTML = `<button class="btn primary" data-go="wizard">Start a game</button><button class="btn" data-go="sample">Explore a sample game</button><a class="btn ghost" href="#flow" style="display:inline-grid;place-items:center;text-decoration:none">How it works</a>`;
+      return;
+    }
+    const top = Math.max(...b.players.map(p => p.total));
+    const seats = b.players.map(p => `<span class="seat ${p.total === top && top > 0 ? 'lead' : ''}" title="${esc(p.name)} · ${esc(fname(p.faction))}"><img src="${em(p.faction)}" alt="" style="--c:${col(p.color)}">${esc(p.name)}<b>${p.total}</b></span>`).join('');
+    $('current').innerHTML = `<div class="current"><div class="row"><h2>${b.sample ? 'Sample game' : 'Game in progress'}</h2><span class="meta">Round ${b.round} · ${PH[b.phase] || 'Setup'} · first to ${b.goal}</span></div><div class="seats">${seats}</div></div>`;
+    $('cta').innerHTML = `<button class="btn primary" data-go="continue">Continue the game</button><button class="btn" data-go="wizard">New game</button>${b.sample ? '' : ''}<a class="btn ghost" href="#flow" style="display:inline-grid;place-items:center;text-decoration:none">How it works</a>`;
+    $('current').style.marginBottom = '16px';
+  }
+  document.addEventListener('click', e => {
+    const g = e.target.closest('[data-go]'); if (!g) return;
+    if (g.dataset.go === 'continue') TI4.open('ledger');
+    else ledger(g.dataset.go);
+  });
+
+  /* ---- season ---- */
+  function seasonGames() { return (read('ti4gm:seasons') || []).filter(g => g && g.players && g.players.length).sort((a, b) => a.date < b.date ? 1 : -1); }
+  const key = n => String(n || '').trim().toLowerCase();
+  function drawSeason() {
+    const games = seasonGames();
+    if (!games.length) {
+      $('seasonBody').innerHTML = `<div class="empty"><svg viewBox="0 0 120 140"><defs><linearGradient id="tg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f6dfa0"/><stop offset="1" stop-color="#9a6a24"/></linearGradient></defs>
+        <path d="M30 14h60v20c0 22-14 38-30 40-16-2-30-18-30-40z" fill="url(#tg)"/><path d="M30 22H14c0 16 8 26 18 28M90 22h16c0 16-8 26-18 28" fill="none" stroke="#e8c36a" stroke-width="4"/>
+        <rect x="52" y="74" width="16" height="22" fill="#c9963e"/><rect x="34" y="96" width="52" height="12" rx="3" fill="#e8c36a"/><rect x="26" y="108" width="68" height="16" rx="4" fill="#7a5420"/>
+        <path d="M60 26l4 8 9 1.3-6.5 6.3 1.5 9L60 46l-8 4.2 1.5-9L47 35.3l9-1.3z" fill="#fff7dd" opacity=".85"/></svg>
+        <div><h3>The record is empty</h3><p>When a game ends (someone reaches the goal, or you choose <i>End game · show results</i> in Game setup), it's recorded here: champions, player records, favourite factions, battle tallies and the laws that keep getting passed. Sample games don't count.</p></div></div>`;
+      return;
+    }
+    // players across games are matched by name
+    const P = {}, F = {}, L = {};
+    let rounds = 0, minutes = 0, battles = 0;
+    for (const g of games) {
+      rounds += g.rounds || 0; minutes += g.minutes || 0; battles += (g.battles || []).length;
+      const byId = Object.fromEntries(g.players.map(p => [p.id, p]));
+      for (const p of g.players) {
+        const k = key(p.name), r = P[k] = P[k] || { name: p.name, games: 0, wins: 0, vp: 0, bw: 0, bl: 0, facs: {}, color: p.color, faction: p.faction };
+        r.games++; r.vp += p.total; r.facs[p.faction] = (r.facs[p.faction] || 0) + 1; r.color = p.color; r.faction = p.faction;
+        if ((g.winners || []).includes(p.id)) r.wins++;
+        const f = F[p.faction] = F[p.faction] || { id: p.faction, games: 0, wins: 0, vp: 0 };
+        f.games++; f.vp += p.total; if ((g.winners || []).includes(p.id)) f.wins++;
+      }
+      for (const x of g.battles || []) {
+        if (!x.winner) continue;
+        const loser = x.winner === x.att ? x.def : x.att;
+        if (byId[x.winner]) P[key(byId[x.winner].name)].bw++;
+        if (byId[loser]) P[key(byId[loser].name)].bl++;
+      }
+      for (const a of g.agendas || []) if (a.pill === 'law') L[a.id] = (L[a.id] || 0) + 1;
+    }
+    const players = Object.values(P).sort((a, b) => b.wins - a.wins || b.wins / b.games - a.wins / a.games || b.vp / b.games - a.vp / a.games);
+    const facs = Object.values(F).sort((a, b) => b.wins - a.wins || b.games - a.games);
+    const lead = players[0];
+    const fav = r => Object.entries(r.facs).sort((a, b) => b[1] - a[1])[0][0];
+    const kpi = (v, l, s) => `<div class="kpi"><b>${v}</b><span>${l}</span>${s ? `<small>${s}</small>` : ''}</div>`;
+    const champs = games.slice(0, 6).map(g => {
+      const w = g.players.find(p => (g.winners || [])[0] === p.id) || g.players[0];
+      const d = new Date(g.date);
+      return `<div class="champ"><img src="${em(w.faction)}" alt="" style="--c:${col(w.color)}"><div><b>${esc(w.name)}</b> <span class="sub">· ${esc(fname(w.faction))}</span><div class="sub">${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} · ${g.players.length} players · ${g.rounds} rounds${g.reached ? '' : ' · ended early'}</div></div><div class="vp">${w.total}<span class="sub"> VP</span></div></div>`;
+    }).join('');
+    const prow = players.map(r => `<tr><td><span class="who"><img src="${em(fav(r))}" alt="" style="--c:${col(r.color)}">${esc(r.name)}</span></td><td class="n">${r.games}</td><td class="n"><b>${r.wins}</b></td>
+      <td class="hide-sm"><div class="bar"><i style="width:${Math.round(100 * r.wins / r.games)}%"></i></div></td><td class="n">${(r.vp / r.games).toFixed(1)}</td><td class="n hide-sm">${r.bw}–${r.bl}</td></tr>`).join('');
+    const frow = facs.slice(0, 10).map(f => `<tr><td><span class="who"><img src="${em(f.id)}" alt="" style="--c:#6b7a99">${esc(fname(f.id))}</span></td><td class="n">${f.games}</td><td class="n"><b>${f.wins}</b></td><td class="n">${(f.vp / f.games).toFixed(1)}</td></tr>`).join('');
+    const laws = Object.entries(L).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id, n]) => `<span class="tag">${esc(id.replace(/-/g, ' '))} · ${n}×</span>`).join(' ');
+    $('seasonBody').innerHTML =
+      `<div class="kpis">${kpi(games.length, 'Games recorded', minutes ? Math.round(minutes / games.length / 60 * 10) / 10 + ' hours on average' : '')}${kpi(lead ? esc(lead.name) : '—', 'Most wins', lead ? lead.wins + ' of ' + lead.games + ' games' : '')}${kpi((rounds / games.length).toFixed(1), 'Rounds per game')}${kpi(battles, 'Battles resolved', 'by the Arbiter')}</div>
+       <div class="grid2"><div class="panel"><h3>Player standings</h3><table><thead><tr><th>Player</th><th class="n">Games</th><th class="n">Wins</th><th class="hide-sm">Win rate</th><th class="n">Avg VP</th><th class="n hide-sm">Battles W–L</th></tr></thead><tbody>${prow}</tbody></table></div>
+       <div class="panel"><h3>Hall of champions</h3><div class="champs">${champs}</div></div></div>
+       <div class="grid2" style="margin-top:18px"><div class="panel"><h3>Factions</h3><table><thead><tr><th>Faction</th><th class="n">Played</th><th class="n">Wins</th><th class="n">Avg VP</th></tr></thead><tbody>${frow}</tbody></table></div>
+       <div class="panel"><h3>Laws that keep passing</h3><p style="margin:0 0 14px">${laws || '<span class="note">No laws recorded yet.</span>'}</p></div></div>`;
+  }
+  $('exportSeason').onclick = () => {
+    const data = JSON.stringify({ ti4gmSeason: 1, exported: new Date().toISOString(), games: read('ti4gm:seasons') || [] }, null, 1);
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+    a.download = 'ti4-season-' + new Date().toISOString().slice(0, 10) + '.json'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  };
+  $('importSeasonBtn').onclick = () => $('importSeason').click();
+  $('importSeason').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const d = JSON.parse(await f.text()), add = Array.isArray(d) ? d : d.games;
+      if (!Array.isArray(add)) throw 0;
+      const have = read('ti4gm:seasons') || [], ids = new Set(have.map(g => g.gid));
+      localStorage.setItem('ti4gm:seasons', JSON.stringify(have.concat(add.filter(g => g && g.gid && !ids.has(g.gid)))));
+      drawSeason();
+    } catch (err) { alert("That file isn't a season file from this site."); }
+    e.target.value = '';
+  };
+
+  /* ---- table tools ---- */
+  $('openTable').onclick = () => window.open('../table/', 'ti4gm-table');
+  $('openBattle').onclick = () => window.open('../arbiter/#display', 'ti4gm-battle');
+  $('openSaves').onclick = () => ledger('menu');
+  const OPTS = [['sound', 'Battle sound effects'], ['fast', 'Fast battle animations'], ['quick', 'Auto-advance rule tips'], ['motion', 'Animated agenda reveals']];
+  function drawOpts() { const o = TI4.options.read(); $('opts').innerHTML = OPTS.map(([k, l]) => `<button class="chip" data-opt="${k}" aria-pressed="${!!o[k]}">${l}</button>`).join(''); }
+  $('opts').addEventListener('click', e => { const b = e.target.closest('[data-opt]'); if (!b) return; const o = TI4.options.read(); TI4.options.write({ [b.dataset.opt]: !o[b.dataset.opt] }); drawOpts(); });
+
+  /* ---- live ---- */
+  const redraw = () => { drawCurrent(); drawSeason(); drawOpts(); };
+  TI4.on('board', drawCurrent); TI4.on('table', drawCurrent); TI4.on('season', drawSeason); TI4.on('options', drawOpts);
+  TI4.on('shell:shown', m => { if (m.tool === 'home') { redraw(); scrollTo(0, 0); } });
+  redraw();
+
+  /* ---- star field ---- */
+  const cv = $('sky'), cx = cv.getContext('2d'); let stars = [], W = 0, H = 0, still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function size() {
+    const d = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; cv.width = W * d; cv.height = H * d; cx.setTransform(d, 0, 0, d, 0, 0);
+    stars = Array.from({ length: Math.round(W * H / 2600) }, () => ({ x: Math.random() * W, y: Math.random() * H, z: Math.random(), t: Math.random() * 6.28 }));
+  }
+  function frame(ts) {
+    cx.clearRect(0, 0, W, H);
+    const off = scrollY * 0.15;
+    for (const s of stars) {
+      const tw = still ? .8 : .55 + .45 * Math.sin(s.t + ts / (900 + s.z * 1400));
+      const y = ((s.y - off * (0.3 + s.z)) % H + H) % H;
+      cx.globalAlpha = (0.25 + s.z * 0.75) * tw; cx.fillStyle = s.z > .93 ? '#ffe9c0' : s.z > .85 ? '#cfe8ff' : '#fff';
+      const r = 0.4 + s.z * 1.3; cx.beginPath(); cx.arc(s.x, y, r, 0, 6.283); cx.fill();
+    }
+    if (!still) requestAnimationFrame(frame);
+  }
+  addEventListener('resize', () => { size(); if (still) frame(0); }); size(); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TI4 GameMaster</title>
+<title>GameMaster · Twilight Imperium companion</title>
 <meta name="description" content="Free fan-made companion for Twilight Imperium 4 + Prophecy of Kings: objectives and rounds, agenda phase, and combat in one place.">
 <meta name="theme-color" content="#05070d">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpolygon points='20,2 36,11 36,29 20,38 4,29 4,11' fill='%230b1020' stroke='%23e8c36a' stroke-width='2.5'/%3E%3Cpath d='M20 11l2.6 5.6 6 .7-4.5 4.1 1.3 6L20 24.5l-5.4 2.9 1.3-6-4.5-4.1 6-.7z' fill='%23e8c36a'/%3E%3C/svg%3E">
@@ -21,6 +21,10 @@ html,body{margin:0;height:100%;background:var(--bg);overflow:hidden;font-family:
 .sheet::before{content:"";position:absolute;left:0;right:0;top:-1px;height:2px;z-index:1;pointer-events:none;
   background:linear-gradient(90deg,transparent,var(--t),transparent);opacity:0;transition:opacity .4s .2s}
 .sheet[data-tool="council"]{--t:#e8c36a}.sheet[data-tool="arbiter"]{--t:#ff7a52}
+/* the opening screen fades rather than slides, and sits above everything */
+.sheet[data-tool="home"]{transform:none;opacity:0;visibility:hidden;transition:opacity .5s ease,visibility 0s .5s;z-index:5}
+.sheet[data-tool="home"]::before{display:none}
+.sheet[data-tool="home"].on{opacity:1;visibility:visible;transition:opacity .5s ease}
 body.up .scrim{opacity:1}
 .sheet.on{transform:none;box-shadow:0 -30px 80px rgba(0,0,0,.6)}
 .sheet.on::before{opacity:1}
@@ -68,7 +72,7 @@ window.TI4_SHELL = true;
   function sheet(tool) {
     if (!sheets[tool]) {
       const el = document.createElement('div'); el.className = 'sheet'; el.dataset.tool = tool;
-      const f = document.createElement('iframe'); f.src = tool + '/'; f.title = tool === 'council' ? 'Council Chamber' : 'Battle Arbiter';
+      const f = document.createElement('iframe'); f.src = tool + '/'; f.title = { council: 'Council Chamber', arbiter: 'Battle Arbiter', home: 'GameMaster' }[tool];
       f.setAttribute('allow', 'clipboard-write');
       el.appendChild(f); document.body.appendChild(el); sheets[tool] = el;
       el.getBoundingClientRect();           // let the first slide-in animate
@@ -76,25 +80,27 @@ window.TI4_SHELL = true;
     return sheets[tool];
   }
   function show(tool, push) {
-    if (tool !== 'council' && tool !== 'arbiter') tool = 'ledger';
+    if (tool !== 'council' && tool !== 'arbiter' && tool !== 'home') tool = 'ledger';
     if (tool === current) return;
     current = tool;
     for (const t in sheets) if (t !== tool) sheets[t].classList.remove('on');
     if (tool !== 'ledger') { const el = sheet(tool); requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on'))); }
-    document.body.classList.toggle('up', tool !== 'ledger');
-    if (push !== false) history.replaceState(null, '', tool === 'ledger' ? location.pathname + location.search : '#' + tool);
+    document.body.classList.toggle('up', tool === 'council' || tool === 'arbiter');
+    if (push !== false) history.replaceState(null, '', tool === 'home' ? location.pathname + location.search : '#' + (tool === 'ledger' ? 'game' : tool));
     TI4.emit('shell:shown', { tool });
     try { (tool === 'ledger' ? base : sheet(tool).firstChild).contentWindow.focus(); } catch (e) {}
   }
   TI4.on('shell:open', m => show(m.tool));
   TI4.on('shell:about', () => document.getElementById('about').showModal());
   /* a loaded game: drop the Council and Arbiter so they reopen from the new data */
-  TI4.on('shell:reload', () => { for (const t in sheets) { sheets[t].remove(); delete sheets[t]; } if (current !== 'ledger') { current = 'ledger'; document.body.classList.remove('up'); } });
+  TI4.on('shell:reload', () => { for (const t of ['council', 'arbiter']) if (sheets[t]) { sheets[t].remove(); delete sheets[t]; } if (current === 'council' || current === 'arbiter') { current = 'ledger'; document.body.classList.remove('up'); } });
   addEventListener('hashchange', () => show(location.hash.slice(1), false));
 
-  /* opening straight to #council or #arbiter (e.g. after a refresh) */
+  /* arrive on the opening screen; #game, #council or #arbiter open straight into play */
   const h = location.hash.slice(1);
   if (h === 'council' || h === 'arbiter') setTimeout(() => show(h, false), 300);
+  else if (h !== 'game') show('home', false);
+  document.getElementById('boot').classList.add('gone');
 })();
 </script>
 </body>

@@ -4286,6 +4286,11 @@ window.COUNCIL_CARDS = {
   var gmSpk = null;
   function gmPushVotes() {
     if (!GM || !state || !state.seats) return;
+    /* laws in force, for the table screen */
+    try {
+      var laws = JSON.stringify({ gid: state.gid, laws: state.laws.map(function (l) { return { id: l.id, name: byId[l.id] ? byId[l.id].n : l.id, holder: l.holder || null, round: l.round, text: l.text || '' }; }) });
+      if (localStorage.getItem('ti4gm:laws') !== laws) { localStorage.setItem('ti4gm:laws', laws); TI4.emit('laws', {}); }
+    } catch (e) {}
     state.seats.forEach(function (s) { if (s.pid) TI4.profiles.update(s.pid, { votes: Object.assign({}, s.flags || {}) }); });
     /* the speaker token moved here (Politics Rider, Public Execution, Make speaker): tell the Ledger */
     var t = TI4.table.read(), sp = state.seats[state.speaker], pid = sp && sp.pid;

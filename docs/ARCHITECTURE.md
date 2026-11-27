@@ -33,6 +33,8 @@ Things worth knowing:
 ```
 /                         GitHub Pages serves this folder as-is (no build step)
 ├─ index.html             Shell: the Ledger full-screen; Council and Arbiter slide up over it. About/notice   ✅
+├─ home/                  Opening screen: explains the site, game in progress, season stats, table screen, options, saved games, credits   ✅
+├─ table/                 TV table screen (read-only; follows the game live on the same device)   ✅
 ├─ ledger/                Ledger module (index.html, scenes.js, scenes.css)   ✅ ported: shared art, real download
 ├─ council/               Council Chamber module   ✅ ported: players from the table, results to the Ledger
 ├─ arbiter/               Battle Arbiter module (also /arbiter/#display for the TV)   ✅ ported: roster from the table, battles from/to the Ledger
@@ -211,3 +213,21 @@ Known gaps:
 * Copy game copies a bundle `{gm:1, ledger, council, arbiter, profiles, options, outbox}`; Load pasted game
   accepts the bundle or a plain Ledger game from the old Claude artifact (the Council and Arbiter then start
   fresh for it). The shell closes the Council and Arbiter before the data is written so they can't save over it.
+
+## 11. Opening screen, season stats, table screen (2026-11-27)
+
+* **Opening screen (`home/`).** Shown when the site opens (the Ledger loads behind it). Explains the three
+  tools, shows the game in progress with Continue / New game (or Start a game / Explore a sample game), and
+  holds what doesn't belong on the gameplay screen: season stats, the TV table screen and battle display,
+  table options, saved games, credits. The Ledger's Home button returns to it. `#game` opens straight into
+  play. Requests to the Ledger go through `TI4.pending.set('ledger', {act})` so they work even while the
+  Ledger is still loading.
+* **Season stats.** When the Victory or Game over screen appears (not Standings), the Ledger writes a summary
+  to `ti4gm:seasons` (one entry per game id; replaced if the game is ended again; sample games and games where
+  nobody scored are skipped): players with VP by type and turn time, winners, rounds, minutes, battles from the
+  Arbiter, agendas and laws from the Council. The opening screen shows totals, player standings (players are
+  matched across games by name), Hall of champions, factions and recurring laws, and can save/load a season file.
+* **Table screen (`table/`).** Reads `ti4gm:board` (published by the Ledger on every save: round, phase,
+  active player, speaker, VP by type, revealed objectives with scorers, last battle) and `ti4gm:laws`
+  (published by the Council). Updates live over the bus with a 5-second fallback poll; asks the browser to
+  keep the screen awake; scales the score lanes to fit up to 8 players.

@@ -703,6 +703,7 @@ textarea.inp{min-height:120px;font:400 13px var(--mono)}
     <button class="btn gm-only" data-act="council" title="Open the Galactic Council Chamber">Council</button>
     <button class="btn gm-only" data-act="battle" title="Open the Battle Arbiter">Battle</button>
     <button class="btn" data-act="undo" id="undoBtn">Undo<kbd>Z</kbd></button>
+    <button class="btn gm-only" data-act="home" title="Opening screen: season stats, table screen, saved games">Home</button>
     <button class="btn" data-act="results">Results</button>
     <button class="btn" data-act="edit">Edit game<kbd>E</kbd></button>
     <button class="btn" data-act="menu">Game setup</button>
@@ -1000,10 +1001,40 @@ function gmBundle(){
 function gmUnbundle(b){
   for (const [k, key] of Object.entries(GM_KEYS)) if (b[k] != null) { try { localStorage.setItem(key, JSON.stringify(b[k])); } catch (e) {} }
 }
+/* what the TV table screen shows; written on every save */
+function publishBoard(){
+  const last = (S.battles || []).slice(-1)[0];
+  const b = {gid:S.gid, ts:Date.now(), round:S.round, goal:S.goal, phase:S.g?.phase || null, active:S.g?.active || null, speaker:S.g?.speaker || null, sample:!!S.sample,
+    players:S.players.map(p => ({id:p.id, name:p.name, faction:(TI4.fromLegacy("ledger", p.faction) || {}).id || null, color:p.color, ...vp(p.id)})),
+    publics:S.publics.map(x => ({name:BY[x.id]?.name || x.id, stage:x.stage, pts:ptsOf(x), by:x.by.slice()})),
+    battle:last ? {text:last.text, round:last.round} : null};
+  try { localStorage.setItem("ti4gm:board", JSON.stringify(b)); } catch (e) {}
+  TI4.emit("board", {gid:S.gid});
+}
+/* a finished game goes into the season record (ti4gm:seasons); the same game ended again replaces its entry */
+function gmRecordGame(){
+  if (!GM || !S || S.sample) return;
+  let council = null; try { council = JSON.parse(localStorage.getItem("galactic-council-chamber-v1")); } catch (e) {}
+  if (council && council.gid !== S.gid) council = null;
+  const rows = S.players.map(p => ({id:p.id, name:p.name, faction:(TI4.fromLegacy("ledger", p.faction) || {}).id || null, color:p.color, ...vp(p.id), time:Math.round(playerTime(p.id) / 1000)}))
+    .sort((a, b) => b.total - a.total);
+  const top = rows[0]?.total || 0;
+  if (!top) return;   /* nobody scored: almost certainly a test or a false start */
+  const rec = {gid:S.gid, date:new Date().toISOString(), rounds:S.round, goal:S.goal, minutes:Math.round(elapsed() / 60000),
+    winners:rows.filter(r => r.total === top && top > 0).map(r => r.id), reached:top >= S.goal, players:rows,
+    battles:(S.battles || []).map(x => ({round:x.round, att:x.att, def:x.def, winner:x.winner, text:x.text})),
+    agendas:council ? council.record.filter(r => r.n).map(r => ({round:r.round, id:r.id, label:r.label || "", pill:r.pill || ""})) : [],
+    laws:council ? council.laws.map(l => l.id) : []};
+  let all = []; try { all = JSON.parse(localStorage.getItem("ti4gm:seasons")) || []; } catch (e) {}
+  all = all.filter(g => g.gid !== S.gid).concat([rec]);
+  try { localStorage.setItem("ti4gm:seasons", JSON.stringify(all)); } catch (e) {}
+  TI4.emit("season", {gid:S.gid});
+}
 function publishTable(){
   if (!GM || !S) return;
   TI4.table.write({gid:S.gid, goal:S.goal, round:S.round, phase:S.g?.phase || null, speaker:S.g?.speaker || null, sample:!!S.sample,
     players:S.players.map(p => ({id:p.id, name:p.name, faction:(TI4.fromLegacy("ledger", p.faction) || {}).id || null, color:p.color}))});
+  publishBoard();
   /* a player who is new, or whose faction changed, starts from that faction's sheet */
   const prof = TI4.profiles.all();
   for (const p of S.players) { const fid = (TI4.fromLegacy("ledger", p.faction) || {}).id, pr = prof[p.id];
@@ -1557,6 +1588,7 @@ $("achieve").addEventListener("click", nextAc);
 /* Victory */
 function showVictory(p, ended){
   flush();
+  if (ended !== "standings") gmRecordGame();
   if (ended !== "standings" && S.g.clock.since) { S.g.clock.since = null; S.g.turnStart = null; }
   save(); tick();
   const pt = portrait(p), c = COLORS[p.color] || COLORS.blue;
@@ -1590,6 +1622,7 @@ document.addEventListener("click", e => {
   else if (a === "edit") openEdit();
   else if (a === "wizard") openWizard();
   else if (a === "results") openResults();
+  else if (a === "home") { if (GM) TI4.open("home"); }
   else if (a === "council") { if (GM) TI4.open("council"); }
   else if (a === "battle") { if (GM) TI4.open("arbiter"); }
   else if (a === "about") { if (GM) TI4.emit("shell:about"); }
@@ -2208,6 +2241,12 @@ if (GM) {
   document.body.classList.add("gm");
   publishTable(); ingestBattles();
   TI4.on("outbox", () => { ingestBattles(); render(); });
+  /* requests from the opening screen (it may send them before the Ledger has loaded) */
+  const runPending = () => { const r = TI4.pending.peek("ledger"); if (!r) return; TI4.pending.clear("ledger");
+    if (r.act === "wizard") openWizard(); else if (r.act === "sample") $("mnSample").click(); else if (r.act === "menu") openMenu(); else if (r.act === "results") openResults(); };
+  TI4.on("pending", m => { if (m.tool === "ledger") runPending(); });
+  runPending();
+  TI4.on("ledger:do", m => { if (m.act === "wizard") openWizard(); else if (m.act === "sample") { $("mnSample").click(); } else if (m.act === "menu") openMenu(); else if (m.act === "results") openResults(); });
   TI4.on("shell:shown", m => { if (m.tool === "ledger") { ingestBattles(); render(); } });
 }
 }
