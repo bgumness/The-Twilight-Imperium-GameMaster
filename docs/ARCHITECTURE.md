@@ -181,13 +181,11 @@ agenda hand-off and combat hand-off.
   on save and reads them on sync.
 
 Known gaps:
-* The modules still use their original storage keys (`ti4-objective-ledger-v1`, `galactic-council-chamber-v1`,
-  `ti4-arbiter-*`); renaming to `ti4gm:*` comes with the import tool.
-* A speaker change made in the Council (Politics Rider, Public Execution) isn't sent back to the Ledger yet;
-  the Ledger's speaker wins on the next sync.
+* The modules keep their original storage keys (`ti4-objective-ledger-v1`, `galactic-council-chamber-v1`,
+  `ti4-arbiter-*`). Renaming buys nothing now that Copy game / Load pasted game carry everything.
 * Mutiny voters need the Council's vote tally; if the outcome is recorded without running the tally, the
   Ledger asks who voted For.
-* The three modules still have their own headers and styles; the unified restyle is next.
+* Headers now match (seal + label + title). Deeper visual unification of the module bodies is still open.
 
 ## 9. Room left for later
 
@@ -199,3 +197,17 @@ Known gaps:
   (`GAME.stats`) and the Council keeps every agenda. A Stats page reads all three. Export/import as JSON
   so a season survives clearing the browser.
 * **One name.** The shell shows "GameMaster" as a placeholder; one constant to change.
+
+## 10. Settings travel (2026-11-26, revised)
+
+* Players, factions, colours and seating are owned by the Ledger's setup. The Arbiter's Game & factions
+  screen and the Council's Delegates panel show them read-only inside the site; whatever screen the Arbiter
+  is on refreshes when they change (never mid-battle).
+* Table options (`ti4gm:options`) can be changed in the setup wizard, the Ledger's Game setup menu, the
+  Arbiter (sound, fast animations, rule tips) or the Council (motion), and every open tool applies them live.
+* Speaker: any change in the Council (Politics Rider, Public Execution, Make speaker) becomes a
+  `council:speaker` outbox item that the Ledger applies and logs.
+* A faction changed or a player added in Game setup gets that faction's starting techs in `ti4gm:profiles`.
+* Copy game copies a bundle `{gm:1, ledger, council, arbiter, profiles, options, outbox}`; Load pasted game
+  accepts the bundle or a plain Ledger game from the old Claude artifact (the Council and Arbiter then start
+  fresh for it). The shell closes the Council and Arbiter before the data is written so they can't save over it.

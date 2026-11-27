@@ -6,7 +6,7 @@
 #gmPill span{min-width:0}
 #gmPill.bare{padding:5px;left:auto;right:12px;transform:none}#gmPill.bare span{display:none}#gmPill.bare button{background:rgba(255,122,82,.16);color:#ffb39b;border:1px solid rgba(255,122,82,.55)}
 @media (max-width:700px){#gmPill:not(.bare){top:0;bottom:auto;left:0;right:0;transform:none;max-width:none;border-radius:0 0 16px 16px;padding:8px 8px 8px 14px;font-size:13px;border-top:0}
-  #gmPill span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#gmPill button{height:34px;padding:0 12px;font-size:11px}#gmPill.bare{top:8px;right:8px}}
+  #gmPill span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#gmPill button{height:34px;padding:0 12px;font-size:11px}#gmPill.bare{top:8px;right:8px}#gmPill.bare button{font-size:0;padding:0 14px}#gmPill.bare button::before{content:'\2190  Game';font-size:11px;letter-spacing:.12em}body.in-shell header.top{padding-right:96px}}
 </style></head><body>
 <title>TI4 Battle Arbiter</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -37,8 +37,10 @@ button{cursor:pointer}
 
 /* header */
 .top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-block:18px 10px}
-.brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-.brand h1{font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:.06em;margin:0;text-transform:uppercase}
+.brand{display:flex;align-items:center;gap:clamp(14px,1.6vw,24px);flex-wrap:nowrap;min-width:0}
+.brand .seal{width:clamp(34px,2.6vw,46px);aspect-ratio:1;flex:none;filter:drop-shadow(0 0 10px rgba(255,122,82,.4))}
+.brand .eyebrow{font:500 11px/1.2 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:#ff9a7a;margin-bottom:4px}
+.brand h1{font-family:var(--f-display);font-weight:700;font-size:clamp(18px,1.6vw,28px);letter-spacing:.2em;margin:0;text-transform:uppercase;text-shadow:0 0 18px rgba(255,140,100,.3)}
 .brand h1 span{color:var(--brass)}
 .brand p{margin:0;color:var(--dim);font-size:14px}
 .top .grow{flex:1}
@@ -786,14 +788,14 @@ body.tvmode.tz2 .console .step table,body.tvmode.tz2 .console .step .flav{displa
 
 <main id="game" class="wrap" hidden>
   <header class="top">
-    <div class="brand"><h1>Battle <span>Arbiter</span></h1><p>Set up tonight's game once. Each faction's techs and upgrades are saved for every battle.</p></div>
+    <div class="brand"><svg class="seal" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21" fill="none" stroke="#d9b36c" stroke-width="1.5"/><circle cx="24" cy="24" r="15" fill="none" stroke="#ff7a52" stroke-width="1" stroke-dasharray="3 3"/><path d="M13 13l18 18M35 13L17 31" stroke="#f0d79a" stroke-width="2.6" stroke-linecap="round"/><path d="M29 33l4 4 3-3-4-4M19 33l-4 4-3-3 4-4" fill="none" stroke="#f0d79a" stroke-width="2" stroke-linejoin="round"/><circle cx="24" cy="22" r="2.4" fill="#ff7a52"/></svg><div><div class="eyebrow">Mecatol Rex · Field of Battle</div><h1>The Battle <span>Arbiter</span></h1></div></div>
   </header>
   <div id="gamebody"></div>
 </main>
 
 <main id="setup" class="wrap" hidden>
   <header class="top">
-    <div class="brand"><h1>Battle <span>Arbiter</span></h1><p>Twilight Imperium 4 · Base + Prophecy of Kings · Codex errata</p></div>
+    <div class="brand"><svg class="seal" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21" fill="none" stroke="#d9b36c" stroke-width="1.5"/><circle cx="24" cy="24" r="15" fill="none" stroke="#ff7a52" stroke-width="1" stroke-dasharray="3 3"/><path d="M13 13l18 18M35 13L17 31" stroke="#f0d79a" stroke-width="2.6" stroke-linecap="round"/><path d="M29 33l4 4 3-3-4-4M19 33l-4 4-3-3 4-4" fill="none" stroke="#f0d79a" stroke-width="2" stroke-linejoin="round"/><circle cx="24" cy="22" r="2.4" fill="#ff7a52"/></svg><div><div class="eyebrow">Mecatol Rex · Field of Battle</div><h1>The Battle <span>Arbiter</span></h1></div></div>
     <div class="grow"></div>
     <a class="ghost" id="dispbtn" href="#" target="_blank" rel="noopener">Open battle display ↗</a>
     <button class="ghost" id="editgame" type="button">Game &amp; factions</button>
@@ -2955,9 +2957,9 @@ document.addEventListener('change',e=>{
   if (e.target.id==='env-wtype'){ CFG.env.wtype=e.target.value; save(); return; }
   if (e.target.id && e.target.id.startsWith('env-')){ CFG.env[e.target.id.slice(4)]=e.target.checked; changed(); return; }
   if (e.target.id==='ui-react'){ CFG.ui.react=e.target.checked; save(); return; }
-  if (e.target.id==='ui-quick'){ CFG.ui.quick=e.target.checked; save(); return; }
+  if (e.target.id==='ui-quick'){ CFG.ui.quick=e.target.checked; save(); (window.__gmReady&&TI4.options.write({quick:CFG.ui.quick})); return; }
   if (e.target.id==='ui-deffirst'){ CFG.ui.defFirst=e.target.checked; save(); renderSetup(); return; }
-  if (e.target.id==='ui-fast'||e.target.id==='ui-fast2'){ CFG.ui.fast=e.target.checked; for (const id of ['#ui-fast','#ui-fast2']){ const el=$(id); if(el) el.checked=CFG.ui.fast; } save(); return; }
+  if (e.target.id==='ui-fast'||e.target.id==='ui-fast2'){ CFG.ui.fast=e.target.checked; for (const id of ['#ui-fast','#ui-fast2']){ const el=$(id); if(el) el.checked=CFG.ui.fast; } save(); (window.__gmReady&&TI4.options.write({fast:CFG.ui.fast})); return; }
 });
 function changed(rerender=true){
   pushProfile('A'); if (CFG.D.fac!==CFG.A.fac) pushProfile('D');
@@ -3131,6 +3133,16 @@ function showGame(){
 }
 function nextColor(){ const used=new Set(draft.players.map(p=>p.color)); return (COLORS.find(c=>!used.has(c.k))||COLORS[0]).k; }
 function renderGame(){
+  if (window.__gmReady && TI4.table.read() && GAME && (GAME.players||[]).length){
+    const rows=GAME.players.map(p=>`<div class="prow" style="--v:${colorOf(p.color)}">${LOGO(p.fac,'plogo')}<b>${esc(FACTIONS[p.fac].n)}</b><span style="flex:1">${esc(p.name||'')}</span>
+      <span class="hint" style="margin:0">${(p.upg||[]).length+(p.techs||[]).length?`${(p.upg||[]).length} upgrades, ${(p.techs||[]).length} techs`:'No combat techs yet'}</span></div>`).join('');
+    const hist=(GAME.history||[]).length ? scoreboardHTML() : '';
+    $('#gamebody').innerHTML=`<section class="gblk"><h3>Players this game</h3><p class="hint" style="margin:0 0 12px">These come from the game setup, so there's nothing to enter here. To change a name, colour or faction, use Game setup in the Ledger. Each faction's upgrades and techs are set in the battle setup and saved for the whole game.</p>${rows}</section>
+      ${hist?`<section class="gblk"><h3>Scoreboard · round ${GAME.round||1}</h3>${hist}</section>`:''}
+      <div class="acts" style="margin:16px 0 40px"><button class="go" type="button" id="g-cancel">Back to the battle setup</button></div>`;
+    $('#g-cancel').onclick=()=>showSetup();
+    return;
+  }
   const sel=new Map(draft.players.map(p=>[p.fac,p]));
   const showTE=!!CFG.ui.te || draft.players.some(p=>(FACTIONS[p.fac]||{}).te);
   const tiles=Object.entries(FACTIONS).filter(([k,f])=>k!=='none' && (!f.te||showTE)).map(([k,f])=>{ const p=sel.get(k);
@@ -4504,7 +4516,7 @@ $('#oddstog').onclick=()=>{ CFG.ui.odds=!CFG.ui.odds; save(); syncOddsTog();
 syncOddsTog();
 /* sound toggle (off by default; browsers only start audio after a tap) */
 function syncSound(){ const b=$('#soundbtn'); if (b){ b.textContent=SFX.on?'🔊 Sound on':'🔈 Sound off'; b.setAttribute('aria-pressed',SFX.on); } }
-$('#soundbtn').onclick=()=>{ CFG.ui.sound=!SFX.on; sfxEnable(CFG.ui.sound); save(); syncSound(); if (SFX.on) sfx('land',{hit:true}); };
+$('#soundbtn').onclick=()=>{ CFG.ui.sound=!SFX.on; sfxEnable(CFG.ui.sound); save(); syncSound(); (window.__gmReady&&TI4.options.write({sound:CFG.ui.sound})); if (SFX.on) sfx('land',{hit:true}); };
 if (CFG.ui.sound){ const go=()=>{ sfxEnable(true); syncSound(); removeEventListener('pointerdown',go); }; addEventListener('pointerdown',go); }
 syncSound();
 /* ---------- GameMaster link: roster from the Ledger, battles requested by the Ledger, results back ---------- */
@@ -4535,6 +4547,12 @@ function gmApplyOptions(){
     if (o.sound){ const go=()=>{ sfxEnable(true); syncSound(); removeEventListener('pointerdown',go); }; addEventListener('pointerdown',go); }
     else { try{ sfxEnable(false); syncSound(); }catch(e){} }
   }
+}
+function gmRefresh(newGame){
+  if (current && !current.finished) return;
+  if (!$('#game').hidden) { showGame(); return; }
+  if (!$('#battle').hidden) return;
+  showSetup(newGame ? 0 : undefined);
 }
 function gmPid(fac){ const p=GAME&&GAME.players.find(x=>x.fac===fac); return p&&p.pid||null; }
 let GMREQ=null;
@@ -4568,11 +4586,13 @@ function gmPill(msg, done){
 window.__gm={battleDone:gmBattleDone, take:gmTakeRequest};
 if (GM){
   window.__gmReady=true;
+  if (TI4.inShell) document.body.classList.add('in-shell');
   gmSync();
   gmPill('');
-  TI4.on('profiles', m=>{ if (m.from!==location.pathname && (!current || current.finished)) gmSync(); });
-  TI4.on('options', ()=>{ gmApplyOptions(); save(); });
-  TI4.on('table', ()=>{ if (!current || current.finished) gmSync(); });
+  TI4.on('profiles', m=>{ if (m.from!==location.pathname && (!current || current.finished) && gmSync()) gmRefresh(false); });
+  TI4.on('options', m=>{ if (m.from===location.pathname) return; gmApplyOptions(); save(); for (const id of ['#ui-fast','#ui-fast2']){ const el=$(id); if(el) el.checked=!!CFG.ui.fast; } const q=$('#ui-quick'); if (q) q.checked=!!CFG.ui.quick; });
+  TI4.on('shell:shown', m=>{ if (m.tool==='arbiter' && !GMREQ && (!current || current.finished) && $('#battle').hidden) { gmSync(); gmRefresh(false); } });
+  TI4.on('table', m=>{ if (current && !current.finished) return; const was=GAME&&GAME.gid; if (gmSync()) gmRefresh(was!==m.gid); });
   TI4.on('pending', m=>{ if (m.tool==='arbiter') gmTakeRequest(); });
   TI4.on('shell:shown', m=>{ if (m.tool==='arbiter') gmTakeRequest(); });
 }

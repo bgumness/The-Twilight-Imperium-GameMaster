@@ -88,6 +88,8 @@ window.TI4_SHELL = true;
   }
   TI4.on('shell:open', m => show(m.tool));
   TI4.on('shell:about', () => document.getElementById('about').showModal());
+  /* a loaded game: drop the Council and Arbiter so they reopen from the new data */
+  TI4.on('shell:reload', () => { for (const t in sheets) { sheets[t].remove(); delete sheets[t]; } if (current !== 'ledger') { current = 'ledger'; document.body.classList.remove('up'); } });
   addEventListener('hashchange', () => show(location.hash.slice(1), false));
 
   /* opening straight to #council or #arbiter (e.g. after a refresh) */

@@ -447,7 +447,9 @@ body.still .rv-art *{animation:none!important}
   .rv-art{inset:0}
   .rv-panel{position:relative;width:auto;border-left:0;border-top:1px solid var(--line)}
 }
-.rv-art .a-dim{animation:adim 9s ease-in-out infinite}@keyframes adim{0%,35%{opacity:.85}55%,100%{opacity:.04}}.rv-art .a-leg{animation:aleg 1.1s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 0}@keyframes aleg{from{transform:rotate(-20deg)}to{transform:rotate(20deg)}}.rv-art .a-arm{animation:aleg 1.1s ease-in-out infinite alternate-reverse;transform-box:fill-box;transform-origin:30% 0}.rv-art .a-gait{animation:agait .55s ease-in-out infinite alternate}@keyframes agait{from{transform:translateY(0)}to{transform:translateY(-5px)}}.rv-art .a-roll{animation:aroll 10s linear infinite}@keyframes aroll{from{transform:translateX(0)}to{transform:translateX(-800px)}}.rv-art .a-wheel{animation:aspin 1.2s linear infinite}.rv-art .a-ash{animation:aash2 9s linear infinite}@keyframes aash2{from{transform:translate(0,0)}to{transform:translate(-120px,1100px)}}#gmPill{position:fixed!important;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:auto;height:auto;transform:translateX(-50%);z-index:999;display:flex;align-items:center;gap:12px;max-width:calc(100% - 24px);padding:8px 8px 8px 16px;border-radius:999px;background:rgba(10,14,26,.94);border:1px solid rgba(232,195,106,.6);box-shadow:0 10px 30px rgba(0,0,0,.5);color:#e9eef7;font:500 14px/1.3 Barlow,system-ui,sans-serif}
+.rv-art .a-dim{animation:adim 9s ease-in-out infinite}@keyframes adim{0%,35%{opacity:.85}55%,100%{opacity:.04}}.rv-art .a-leg{animation:aleg 1.1s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 0}@keyframes aleg{from{transform:rotate(-20deg)}to{transform:rotate(20deg)}}.rv-art .a-arm{animation:aleg 1.1s ease-in-out infinite alternate-reverse;transform-box:fill-box;transform-origin:30% 0}.rv-art .a-gait{animation:agait .55s ease-in-out infinite alternate}@keyframes agait{from{transform:translateY(0)}to{transform:translateY(-5px)}}.rv-art .a-roll{animation:aroll 10s linear infinite}@keyframes aroll{from{transform:translateX(0)}to{transform:translateX(-800px)}}.rv-art .a-wheel{animation:aspin 1.2s linear infinite}.rv-art .a-ash{animation:aash2 9s linear infinite}@keyframes aash2{from{transform:translate(0,0)}to{transform:translate(-120px,1100px)}}body.gm #plForm,body.gm .scol,body.gm [data-smv],body.gm [data-srm]{display:none!important}
+body.gm .seat-name,body.gm .seat-fac{pointer-events:none;border-color:transparent!important;background:transparent!important;-webkit-appearance:none;appearance:none;padding-left:0}
+#gmPill{position:fixed!important;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:auto;height:auto;transform:translateX(-50%);z-index:999;display:flex;align-items:center;gap:12px;max-width:calc(100% - 24px);padding:8px 8px 8px 16px;border-radius:999px;background:rgba(10,14,26,.94);border:1px solid rgba(232,195,106,.6);box-shadow:0 10px 30px rgba(0,0,0,.5);color:#e9eef7;font:500 14px/1.3 Barlow,system-ui,sans-serif}
 #gmPill button{flex:none;height:36px;padding:0 16px;border-radius:999px;border:0;background:#e8c36a;color:#1a1204;font:700 12px Oxanium,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
 #gmPill.bare{padding:5px;left:auto;right:16px;transform:none}#gmPill.bare span{display:none}#gmPill.bare button{background:rgba(232,195,106,.14);color:#f1d590;border:1px solid rgba(232,195,106,.55)}
 #gmPill.done button{animation:gmp 1.4s ease-in-out infinite}@keyframes gmp{50%{box-shadow:0 0 0 6px rgba(232,195,106,.25)}}
@@ -3457,7 +3459,8 @@ window.COUNCIL_CARDS = {
     }, 1800);
   };
   function applyMotion() { document.body.classList.toggle('still', still); $('btnMotion').textContent = 'Motion: ' + (still ? 'Off' : 'On'); $('btnMotion').setAttribute('aria-pressed', String(!still)); }
-  $('btnMotion').addEventListener('click', function () { still = !still; chosen = true; try { localStorage.setItem(KEY + '-still', still ? '1' : '0'); } catch (e) {} applyMotion(); });
+  $('btnMotion').addEventListener('click', function () { still = !still; chosen = true; try { localStorage.setItem(KEY + '-still', still ? '1' : '0'); } catch (e) {} applyMotion(); if (window.TI4 && TI4.options) TI4.options.write({ motion: !still }); });
+  if (window.TI4 && TI4.on) TI4.on('options', function (m) { if (m.from === location.pathname) return; var o = TI4.options.read(); still = !o.motion; chosen = true; applyMotion(); });
   applyMotion();
 
   /* Agenda archive: browse every card without touching the game record */
@@ -4273,12 +4276,21 @@ window.COUNCIL_CARDS = {
     var si = t.players.map(function (p) { return p.id; }).indexOf(t.speaker); if (si > -1) state.speaker = si;
     if (t.round) state.round = t.round;
     state.sample = false;
-    save(); gmLawWatch(true);
+    gmSpk = null; save(); gmLawWatch(true);
+    document.body.classList.add('gm');
+    var intro = document.querySelector('#players .dlg > p');
+    if (intro) intro.textContent = 'Players, factions, colors and seating come from the game setup. Tick abilities as players unlock them; they change how votes are counted and stay with each player for the rest of the game.';
+    $('plH').textContent = 'Delegates';
     return true;
   }
+  var gmSpk = null;
   function gmPushVotes() {
     if (!GM || !state || !state.seats) return;
     state.seats.forEach(function (s) { if (s.pid) TI4.profiles.update(s.pid, { votes: Object.assign({}, s.flags || {}) }); });
+    /* the speaker token moved here (Politics Rider, Public Execution, Make speaker): tell the Ledger */
+    var t = TI4.table.read(), sp = state.seats[state.speaker], pid = sp && sp.pid;
+    if (t && pid && pid !== t.speaker && pid !== gmSpk) { gmSpk = pid; TI4.outbox.push({ kind: 'council:speaker', pid: pid }); }
+    if (t && pid === t.speaker) gmSpk = null;
   }
   function gmAgendasDone() { return state.record.filter(function (r) { return r.round === state.round && r.n; }).length >= 2; }
   function gmPill(msg, done) {

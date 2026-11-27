@@ -437,6 +437,7 @@ body:not(.gm) .gm-only{display:none}
 .vc-head{display:flex;align-items:center;gap:18px}
 .vc-head .tok{width:clamp(64px,6vw,104px);animation:sigIn 1s .2s both}
 .vc-main .procl-word{font-size:clamp(46px,6.4vw,128px);text-align:left}
+.vc-head>div{min-width:0}.vc-head .procl-word{font-size:clamp(34px,4.1vw,104px);letter-spacing:.1em;overflow-wrap:anywhere}
 .vc-main .procl-sub{text-align:left}
 .vc-table{width:100%;border-collapse:collapse;font-size:.95em;animation:riseIn .8s .9s both}
 .vc-table th{font:600 .62em var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
@@ -784,6 +785,7 @@ textarea.inp{min-height:120px;font:400 13px var(--mono)}
   <div class="dlg">
     <h2 id="mnH">Game setup</h2>
     <div class="field"><h3>Players · seating order</h3><div id="mnPlayers" style="display:grid;gap:8px"></div><div><button class="sbtn" id="mnAdd">+ Add player</button></div></div>
+    <div class="field gm-only"><h3>Table options</h3><p class="hint" style="margin:0 0 8px">Shared with the Battle Arbiter and the Council Chamber.</p><div class="chips" id="mnOpts"></div></div>
     <div class="two">
       <div class="field"><h3>Decision bar (action phase)</h3><div class="chips" id="mnDec"></div></div>
       <div class="field"><h3>Naalu "0" token</h3><p class="hint" style="margin:0">Set on the Round view during the strategy phase.</p></div>
@@ -795,7 +797,7 @@ textarea.inp{min-height:120px;font:400 13px var(--mono)}
     <div class="dlg-foot"><button class="btn" id="mnEnd">End game · show results</button><button class="btn" id="mnSample">Load sample game</button><button class="btn gold" id="mnNew">Start new game…</button><button class="btn primary" data-close>Done</button></div>
     <p class="hint" id="mnNewHint">Changing names, factions and colors keeps every score. Start new game clears the board.</p>
     <div class="field"><h3>Save or move a game</h3>
-      <textarea class="inp" id="mnJson" spellcheck="false" placeholder="Copy the game here to save it, or paste a saved game and load it."></textarea>
+      <textarea class="inp" id="mnJson" spellcheck="false" placeholder="Copy the game here to save it or move it to another device. Paste a game copied from this site, or from the Claude version of the Ledger, and load it."></textarea>
       <div class="dlg-foot"><button class="btn gold" data-export>Export game log (.md)</button><button class="btn" id="mnCopy">Copy game</button><button class="btn" id="mnLoad">Load pasted game</button></div>
       <p class="hint" id="mnJsonHint"></p>
     </div>
@@ -982,10 +984,30 @@ function load(){try{const t = localStorage.getItem(LS); if (t){const s = JSON.pa
 function save(){try{localStorage.setItem(LS, JSON.stringify(S))}catch(e){} publishTable();}
 /* ---------- GameMaster link: shared table, Council results, Arbiter battles ---------- */
 const GM = !!(window.TI4 && TI4.table);
+function seedProfile(pid, fid, extra){
+  const names = (TI4.START[fid] || []).concat(extra || []);
+  return {fid, start:names, techs:names.map(t => TI4.TECH_ARBITER[t]).filter(Boolean), upg:[], flags:{},
+    votes:Object.fromEntries(names.filter(t => TI4.TECH_COUNCIL[t]).map(t => [TI4.TECH_COUNCIL[t], true]))};
+}
+/* the whole game across all three tools, for Copy game / Load pasted game */
+const GM_KEYS = {council:"galactic-council-chamber-v1", arbiter:"ti4-arbiter-game-v1", profiles:"ti4gm:profiles", options:"ti4gm:options", outbox:"ti4gm:outbox"};
+function gmBundle(){
+  const b = {gm:1, v:1, ledger:S};
+  for (const [k, key] of Object.entries(GM_KEYS)) { try { b[k] = JSON.parse(localStorage.getItem(key)); } catch (e) {} }
+  if (b.outbox) b.outbox = b.outbox.filter(x => x.gid === S.gid);
+  return b;
+}
+function gmUnbundle(b){
+  for (const [k, key] of Object.entries(GM_KEYS)) if (b[k] != null) { try { localStorage.setItem(key, JSON.stringify(b[k])); } catch (e) {} }
+}
 function publishTable(){
   if (!GM || !S) return;
   TI4.table.write({gid:S.gid, goal:S.goal, round:S.round, phase:S.g?.phase || null, speaker:S.g?.speaker || null, sample:!!S.sample,
     players:S.players.map(p => ({id:p.id, name:p.name, faction:(TI4.fromLegacy("ledger", p.faction) || {}).id || null, color:p.color}))});
+  /* a player who is new, or whose faction changed, starts from that faction's sheet */
+  const prof = TI4.profiles.all();
+  for (const p of S.players) { const fid = (TI4.fromLegacy("ledger", p.faction) || {}).id, pr = prof[p.id];
+    if (fid && (!pr || (pr.fid && pr.fid !== fid))) TI4.profiles.update(p.id, seedProfile(p.id, fid)); }
 }
 const AG_NAME = {"mutiny":"Mutiny","seed-of-an-empire":"Seed of an Empire","political-censure":"Political Censure","imperial-rider":"Imperial Rider","classified-document-leaks":"Classified Document Leaks","incentive-program":"Incentive Program"};
 function inbox(){ if (!GM) return []; const done = new Set(S.done || []); return TI4.outbox.list(S.gid).filter(x => (x.kind === "council:agenda" || x.kind === "council:repeal") && !done.has(x.ref)); }
@@ -1031,7 +1053,11 @@ function useInbox(ref){
 }
 function ingestBattles(){
   if (!GM || !S) return;
-  const done = new Set(S.done || []), l = TI4.outbox.list(S.gid).filter(x => x.kind === "arbiter:result" && !done.has(x.ref));
+  const done = new Set(S.done || []);
+  /* speaker token moved in the Council Chamber */
+  const sp = TI4.outbox.list(S.gid).filter(x => x.kind === "council:speaker" && !done.has(x.ref));
+  if (sp.length) { const last = sp[sp.length - 1]; commit(() => { sp.forEach(x => markDone(x.ref)); if (P(last.pid)) S.g.speaker = last.pid; }, `${pname(last.pid)} is the speaker (Council Chamber).`, "rev"); }
+  const l = TI4.outbox.list(S.gid).filter(x => x.kind === "arbiter:result" && !done.has(x.ref));
   if (!l.length) return;
   commit(() => { for (const x of l) { markDone(x.ref); S.battles.push({ref:x.ref, round:S.round, att:x.attacker, def:x.defender, winner:x.winner, text:x.text}); } },
     l.map(x => "Battle: " + x.text).join(" "), "oth");
@@ -1427,6 +1453,7 @@ function drawMenu(){
 <select class="inp" data-f="color" aria-label="Player ${i + 1} color">${Object.entries(COLORS).map(([k, c]) => `<option value="${k}" ${k === p.color ? "selected" : ""}>${c.n}</option>`).join("")}</select>
 <button class="mini" style="width:44px;height:44px" data-del="${p.id}" aria-label="Remove ${esc(p.name)}">×</button></div>`).join("");
   $("mnAdd").disabled = S.players.length >= 8;
+  if (GM) { const o = TI4.options.read(); $("mnOpts").innerHTML = [["sound","Battle sound effects"],["fast","Fast battle animations"],["quick","Auto-advance rule tips in battles"],["motion","Animated agenda reveals"]].map(([k, l]) => `<button class="chip" data-opt="${k}" aria-pressed="${!!o[k]}">${l}</button>`).join(""); }
   $("mnGoal").innerHTML = [10, 14].map(g => `<button class="chip" data-goal="${g}" aria-pressed="${S.goal === g}">${g} VP${g === 14 ? " · long game" : ""}</button>`).join("");
   $("mnOmega").setAttribute("aria-pressed", S.omega);
   $("mnDec").innerHTML = [0, 60, 120, 180].map(v => `<button class="chip" data-dec="${v}" aria-pressed="${S.g.decision === v}">${v ? v / 60 + " min" : "Off"}</button>`).join("");
@@ -1458,11 +1485,18 @@ $("mnNewQuick")?.addEventListener("click", () => {
   save(); render(); close("menu"); openReveal(1);
 });
 $("mnCopy").addEventListener("click", async () => {
-  const t = JSON.stringify(S); $("mnJson").value = t; $("mnJson").select();
+  const t = JSON.stringify(GM ? gmBundle() : S); $("mnJson").value = t; $("mnJson").select();
   try { await navigator.clipboard.writeText(t); $("mnJsonHint").textContent = "Copied. Paste it anywhere to keep this game."; } catch (e) { $("mnJsonHint").textContent = "Select the text above and copy it."; }
 });
 $("mnLoad").addEventListener("click", () => {
-  try { const s = JSON.parse($("mnJson").value); if (!s || s.v !== 1 || !Array.isArray(s.players)) throw 0; undoStack.push(JSON.stringify(S)); S = fix(s); save(); render(); drawMenu(); $("mnJsonHint").textContent = "Game loaded."; }
+  try { let s = JSON.parse($("mnJson").value), bundle = null;
+    if (s && s.gm === 1 && s.ledger) { bundle = s; s = s.ledger; }
+    if (!s || s.v !== 1 || !Array.isArray(s.players)) throw 0;
+    undoStack.push(JSON.stringify(S)); S = fix(s);
+    const done = () => { if (bundle && GM) gmUnbundle(bundle); save(); render(); drawMenu();
+      $("mnJsonHint").textContent = bundle ? "Game loaded, with the Council record and battle history." : "Game loaded. The Council and Battle Arbiter start fresh for it."; };
+    /* close the Council and Arbiter first so they can't save over the loaded game */
+    if (GM && TI4.inShell) { TI4.emit("shell:reload"); setTimeout(done, 250); } else done(); }
   catch (e) { $("mnJsonHint").textContent = "That doesn't look like a saved ledger."; }
 });
 
@@ -2070,9 +2104,7 @@ function wizTechHTML(ps){
 function gmSeed(players){
   if (!GM) return;
   const p = {};
-  players.forEach((pl, i) => { const id = fidOf(pl.faction), names = (TI4.START[id] || []).concat(W.choice[i] || []);
-    p[pl.id] = {start:names, techs:names.map(t => TI4.TECH_ARBITER[t]).filter(Boolean), upg:[], flags:{},
-      votes:Object.fromEntries(names.filter(t => TI4.TECH_COUNCIL[t]).map(t => [TI4.TECH_COUNCIL[t], true]))}; });
+  players.forEach((pl, i) => { p[pl.id] = seedProfile(pl.id, fidOf(pl.faction), W.choice[i] || []); });
   TI4.profiles.reset(S.gid, p);
   TI4.options.write(W.opt || {});
 }
@@ -2169,6 +2201,7 @@ function startFromWizard(){
 S = load() || sample();
 render();
 setView("round");
+$("mnOpts").addEventListener("click", e => { const b = e.target.closest("[data-opt]"); if (!b || !GM) return; const k = b.dataset.opt, o = TI4.options.read(); TI4.options.write({[k]: !o[k]}); drawMenu(); });
 /* GameMaster: runs after the award dialog's own handler, so Undo brings the Council result back */
 $("awGo").addEventListener("click", () => { if (AWREF) { const r = AWREF; AWREF = null; markDone(r); save(); render(); } });
 if (GM) {
