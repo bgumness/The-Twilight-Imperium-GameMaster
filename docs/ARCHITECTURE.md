@@ -32,16 +32,14 @@ Things worth knowing:
 
 ```
 /                         GitHub Pages serves this folder as-is (no build step)
-├─ index.html             Shell: top bar (Ledger · Council · Arbiter), setup wizard, notice
+├─ index.html             Shell: top bar (Ledger · Council · Arbiter), players in the bar, About/notice   ✅
 ├─ ledger/                Ledger module (index.html, scenes.js, scenes.css)   ✅ ported: shared art, real download
-├─ council/               Council Chamber module
-├─ arbiter/               Battle Arbiter module (also /arbiter/#display for the TV)
+├─ council/               Council Chamber module   ✅ ported: players from the table, results to the Ledger
+├─ arbiter/               Battle Arbiter module (also /arbiter/#display for the TV)   ✅ ported: roster from the table, battles from/to the Ledger
 ├─ shared/
 │  ├─ factions.js         Canonical faction ids, names, legacy keys, colours, art paths   ✅ written
-│  ├─ table.js            Shared table state: read/write/subscribe                       (next)
-│  ├─ bus.js              Cross-module events (BroadcastChannel + storage fallback)      (next)
-│  ├─ download.js         Plain browser download helper                                  (next)
-│  └─ shell.css           Top bar + shared tokens only, so module styles stay separate
+│  ├─ table.js            Shared table, outbox (results between modules), pending requests ✅
+│  └─ bus.js              Cross-module messages (BroadcastChannel + storage fallback)        ✅
 ├─ assets/
 │  ├─ units/              11 unit sprites (CC BY, see NOTICE.md)
 │  └─ factions/
@@ -151,3 +149,42 @@ room code. Nothing in this design blocks that.
 
 Desktop 1440 px, tablet 820 px, phone 390 px, for each module and for the tab switch, setup wizard,
 agenda hand-off and combat hand-off.
+
+## 8. Built (2026-11-26): one game flow
+
+* **Shared players.** The Ledger's setup is the single source. Every Ledger save publishes `ti4gm:table`
+  (game id, players with canonical faction ids and colours, speaker, round, phase). The Council rebuilds its
+  seats from it (keeping per-seat ability flags) and the Arbiter rebuilds its roster (keeping each faction's
+  techs/upgrades). A new game id resets the Council record and the Arbiter roster.
+* **Agenda phase.** The Ledger's agenda phase has "Open the Council Chamber". When the Council resolves
+  Mutiny, Seed of an Empire, Political Censure, Classified Document Leaks or Incentive Program, or an
+  Imperial Rider pays out, it writes an outbox item. The Ledger lists these under "From the Council
+  Chamber" with Record/Reveal and Dismiss. Record opens the Ledger's own points dialog pre-filled (Mutiny
+  voters from the vote tally, Seed winner from the current scores, the censured player, the leaked secret).
+  A repealed Political Censure offers to remove the point. Results are tied to the Ledger's Undo.
+* **Combat.** The Space combat and Ground combat steps of a tactical action show the Battle Arbiter: pick
+  the defender, the shell switches to the Arbiter with both factions and their saved techs loaded, at the
+  System step. When the battle ends the result goes to the Ledger's log, and "Back to the Ledger" returns
+  to the same step with the turn timer still running.
+* **Shell.** Modules load once in same-origin iframes and stay alive while hidden; tabs show a dot when
+  another module has something waiting.
+
+Known gaps:
+* The modules still use their original storage keys (`ti4-objective-ledger-v1`, `galactic-council-chamber-v1`,
+  `ti4-arbiter-*`); renaming to `ti4gm:*` comes with the import tool.
+* A speaker change made in the Council (Politics Rider, Public Execution) isn't sent back to the Ledger yet;
+  the Ledger's speaker wins on the next sync.
+* Mutiny voters need the Council's vote tally; if the outcome is recorded without running the tally, the
+  Ledger asks who voted For.
+* The three modules still have their own headers and styles; the unified restyle is next.
+
+## 9. Room left for later
+
+* **Table screen (TV).** A `#table` route in the shell for a big display: score track, current phase and
+  speaker from `ti4gm:table`, the Council's reveal, and the Arbiter's existing battle display. Everything it
+  needs is already broadcast on the bus, so it can be a read-only page that just listens.
+* **Season stats.** On "End game" the Ledger will append a summary to `ti4gm:seasons` (date, players,
+  factions, winner, VP by source, rounds, time); the Arbiter already keeps per-faction battle stats
+  (`GAME.stats`) and the Council keeps every agenda. A Stats page reads all three. Export/import as JSON
+  so a season survives clearing the browser.
+* **One name.** The shell shows "GameMaster" as a placeholder; one constant to change.

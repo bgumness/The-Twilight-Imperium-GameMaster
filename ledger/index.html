@@ -415,6 +415,13 @@ body{overflow-x:hidden;overflow-y:auto;display:block}
 @keyframes kb{from{transform:scale(1.02)}to{transform:scale(1.14) translate(-2%,-2%)}}
 .vc-art .glow{position:absolute;inset:0;background:radial-gradient(circle at 40% 30%,transparent 40%,rgba(4,6,12,.6))}
 .vc-art .fallback{position:absolute;inset:0;display:grid;place-items:center}
+.gm-inbox{border:1px solid rgba(232,195,106,.45);background:linear-gradient(180deg,rgba(232,195,106,.10),rgba(232,195,106,.03));border-radius:14px;padding:12px 14px;margin:0 0 14px;display:grid;gap:8px}
+.gm-inbox .eyebrow{color:var(--gold)}
+.gm-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.gm-row>span{flex:1;min-width:220px;line-height:1.4}
+.gm-arb{margin-top:12px;border:1px solid rgba(255,122,82,.45);background:linear-gradient(180deg,rgba(255,122,82,.10),rgba(255,122,82,.02));border-radius:14px;padding:12px 14px}
+.gm-arb .eyebrow{color:#ff9a7a}.gm-arb p{margin:6px 0 10px;line-height:1.45}
+.gm-arb .chip .tok{width:22px;height:22px;margin-right:6px;font-size:9px;border-width:2px}
+.big.gm-council{border-color:rgba(232,195,106,.6);background:linear-gradient(180deg,rgba(232,195,106,.16),rgba(232,195,106,.04))}
 .ffg-c{position:absolute;left:10px;bottom:8px;font:500 10px/1 var(--mono,monospace);letter-spacing:.04em;color:rgba(255,255,255,.62);text-shadow:0 1px 2px #000;pointer-events:none}
 .vc-art .fallback .tok{width:min(40vh,260px);font-size:min(10vh,70px)}
 .vc-main{display:flex;flex-direction:column;justify-content:center;gap:clamp(10px,1.8vh,20px);padding:clamp(20px,5vh,64px) clamp(20px,4vw,72px)}
@@ -809,6 +816,9 @@ textarea.inp{min-height:120px;font:400 13px var(--mono)}
   </div>
 </div>
 
+<script src="../shared/factions.js"></script>
+<script src="../shared/bus.js"></script>
+<script src="../shared/table.js"></script>
 <script src="scenes.js"></script>
 <script>
 {
@@ -922,7 +932,7 @@ function esc(s){return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<
 const $ = id => document.getElementById(id);
 function uid(){return Math.random().toString(36).slice(2, 9)}
 function blank(players){
-  return {v:1, goal:10, round:1, omega:true, slots1:5, slots2:5, players, publics:[], secrets:[], extras:[], log:[], status:{}, won:[], sample:false, g:newG(players)};
+  return {v:1, gid:(window.TI4 && TI4.newGid ? TI4.newGid() : "g" + Date.now().toString(36)), done:[], battles:[], goal:10, round:1, omega:true, slots1:5, slots2:5, players, publics:[], secrets:[], extras:[], log:[], status:{}, won:[], sample:false, g:newG(players)};
 }
 function sample(){
   const P = [["Ben","Federation of Sol","blue"],["Alex","Emirates of Hacan","yellow"],["Jordan","Barony of Letnev","red"],["Sam","Universities of Jol-Nar","purple"],["Taylor","The Nomad","orange"],["Casey","Argent Flight","green"]]
@@ -955,9 +965,65 @@ function sample(){
 }
 function newG(players){ const n = players.find(p => p.faction === "Naalu Collective");
   return {phase:"strategy", speaker:players[0]?.id || null, naalu:n ? n.id : null, picks:{}, used:{}, passed:[], active:null, clock:{acc:0, since:null}, timers:{}, turnStart:null, tg:{}, checks:[], decision:0}; }
-function fix(s){ if (!s.g) s.g = newG(s.players); return s; }
+function fix(s){ if (!s.g) s.g = newG(s.players); if (!s.gid) s.gid = window.TI4 && TI4.newGid ? TI4.newGid() : "g" + Date.now().toString(36); if (!s.done) s.done = []; if (!s.battles) s.battles = []; return s; }
 function load(){try{const t = localStorage.getItem(LS); if (t){const s = JSON.parse(t); if (s && s.v === 1 && Array.isArray(s.players)) return fix(s);}}catch(e){} return null}
-function save(){try{localStorage.setItem(LS, JSON.stringify(S))}catch(e){}}
+function save(){try{localStorage.setItem(LS, JSON.stringify(S))}catch(e){} publishTable();}
+/* ---------- GameMaster link: shared table, Council results, Arbiter battles ---------- */
+const GM = !!(window.TI4 && TI4.table);
+function publishTable(){
+  if (!GM || !S) return;
+  TI4.table.write({gid:S.gid, goal:S.goal, round:S.round, phase:S.g?.phase || null, speaker:S.g?.speaker || null, sample:!!S.sample,
+    players:S.players.map(p => ({id:p.id, name:p.name, faction:(TI4.fromLegacy("ledger", p.faction) || {}).id || null, color:p.color}))});
+}
+const AG_NAME = {"mutiny":"Mutiny","seed-of-an-empire":"Seed of an Empire","political-censure":"Political Censure","imperial-rider":"Imperial Rider","classified-document-leaks":"Classified Document Leaks","incentive-program":"Incentive Program"};
+function inbox(){ if (!GM) return []; const done = new Set(S.done || []); return TI4.outbox.list(S.gid).filter(x => (x.kind === "council:agenda" || x.kind === "council:repeal") && !done.has(x.ref)); }
+function inboxText(x){
+  const n = AG_NAME[x.agenda] || x.name || x.agenda;
+  if (x.kind === "council:repeal") return `<b>${esc(n)}</b> was repealed${x.holder ? ` · ${esc(pname(x.holder))} loses the point` : ""}.`;
+  if (x.agenda === "mutiny") return `<b>Mutiny · ${x.outcome === "for" ? "For" : "Against"} wins.</b> ${x.voters ? (x.voters.length ? `Voted For: ${esc(names(x.voters))}.` : "Nobody voted For.") : "Pick who voted For."}`;
+  if (x.agenda === "seed-of-an-empire") return `<b>Seed of an Empire · ${x.outcome === "for" ? "the leader" : "last place"} gains 1 VP.</b>`;
+  if (x.agenda === "political-censure") return `<b>Political Censure</b> · ${x.who ? esc(x.who) + " is censured" : "choose who"} (+1 VP while they hold it).`;
+  if (x.agenda === "imperial-rider") return `<b>Imperial Rider</b> · ${x.pids && x.pids.length ? esc(names(x.pids)) + " predicted right" : "correct prediction"} (+1 VP).`;
+  if (x.agenda === "classified-document-leaks") return `<b>Classified Document Leaks</b> · ${x.who ? esc(x.who) + " becomes public" : "a scored secret becomes public"}.`;
+  if (x.agenda === "incentive-program") return `<b>Incentive Program · ${x.outcome === "for" ? "For" : "Against"}</b> · reveal a Stage ${x.outcome === "for" ? "I" : "II"} objective.`;
+  return `<b>${esc(n)}</b> · ${esc(x.outcome || "")}`;
+}
+function inboxHTML(){
+  const l = inbox(); if (!l.length) return "";
+  return `<div class="gm-inbox"><div class="eyebrow">From the Council Chamber</div>${l.map(x => `<div class="gm-row"><span>${inboxText(x)}</span><button class="btn gold" data-g="cin" data-ref="${x.ref}">${x.kind === "council:repeal" ? "Remove point" : x.agenda === "incentive-program" ? "Reveal" : "Record"}</button><button class="btn" data-g="cdis" data-ref="${x.ref}" title="Ignore this result">Dismiss</button></div>`).join("")}</div>`;
+}
+let AWREF = null;
+function markDone(ref){ (S.done = S.done || []).push(ref); }
+function useInbox(ref){
+  const x = inbox().find(i => i.ref === ref); if (!x) return;
+  const n = AG_NAME[x.agenda] || x.agenda;
+  if (x.kind === "council:repeal") {
+    commit(() => { S.extras = S.extras.filter(e => e.src !== "censure"); markDone(ref); }, `Political Censure repealed: the point is removed.`, "oth"); return;
+  }
+  if (x.agenda === "incentive-program") { commit(() => markDone(ref), `Incentive Program (${x.outcome === "for" ? "For" : "Against"}): revealing a Stage ${x.outcome === "for" ? "I" : "II"} objective.`, "rev"); openReveal(x.outcome === "for" ? 1 : 2); return; }
+  let src = null, pids = [], leak = null;
+  if (x.agenda === "mutiny") { src = x.outcome === "for" ? "mutiny-for" : "mutiny-against"; pids = (x.voters || []).filter(P); }
+  else if (x.agenda === "seed-of-an-empire") {
+    const t = S.players.map(p => [p.id, vp(p.id).total]), v = t.map(z => z[1]), want = x.outcome === "for" ? Math.max(...v) : Math.min(...v), hit = t.filter(z => z[1] === want);
+    src = "seed"; pids = hit.length === 1 ? [hit[0][0]] : [];
+  }
+  else if (x.agenda === "political-censure") { src = "censure"; pids = x.pid && P(x.pid) ? [x.pid] : []; }
+  else if (x.agenda === "imperial-rider") { src = "rider"; pids = (x.pids || []).filter(P).slice(0, 1); }
+  else if (x.agenda === "classified-document-leaks") {
+    src = "leak"; const want = String(x.who || "").trim().toLowerCase();
+    const i = S.secrets.findIndex(z => (BY[z.id]?.name || "").toLowerCase() === want); leak = i > -1 ? i : null;
+  }
+  if (!src) return;
+  openAward(); AW.src = src; AW.pids = pids; AW.leak = leak; AWREF = ref; drawAward();
+  if (x.agenda === "seed-of-an-empire" && !pids.length) $("awNote").textContent = "Tied for " + (x.outcome === "for" ? "the most" : "the fewest") + " points: the speaker decides who gains it. " + SRC.seed.note;
+}
+function ingestBattles(){
+  if (!GM || !S) return;
+  const done = new Set(S.done || []), l = TI4.outbox.list(S.gid).filter(x => x.kind === "arbiter:result" && !done.has(x.ref));
+  if (!l.length) return;
+  commit(() => { for (const x of l) { markDone(x.ref); S.battles.push({ref:x.ref, round:S.round, att:x.attacker, def:x.defender, winner:x.winner, text:x.text}); } },
+    l.map(x => "Battle: " + x.text).join(" "), "oth");
+}
 function commit(fn, msg, k){
   undoStack.push(JSON.stringify(S)); if (undoStack.length > 80) undoStack.shift();
   fn();
@@ -1283,6 +1349,7 @@ $("spReveal").addEventListener("click", () => { const ns = nextStage(); if (ns) 
 /* Award */
 let AW = {src:null, pids:[], from:null, label:"", pts:1, leak:null};
 function openAward(pid){
+  AWREF = null;
   AW = {src:null, pids: pid ? [pid] : [], from:null, label:"", pts:1, leak:null};
   $("awSrc").innerHTML = SOURCES.map(s => `<button class="src ${s.leak ? "leak" : ""}" data-src="${s.id}" aria-pressed="false"><b>${esc(s.n)}</b><span>${s.leak ? "Secret → public" : (s.pts > 0 ? "+" : "") + s.pts + " VP" + (s.unique ? " · one holder" : s.multi ? " · several players" : "")}</span></button>`).join("");
   drawAward(); open("award");
@@ -1645,7 +1712,7 @@ const PRIMARY = {
   8:[["Score a public objective","Score 1 revealed public objective right now, if you meet it.","Tap the objective below to record it.","impscore"],["Mecatol Rex or a secret","If you control Mecatol Rex, gain 1 VP. Otherwise, draw 1 secret objective.","Record whichever happened below.","impvp"]]
 };
 function guideSteps(k, n){
-  if (k === "tact") return TAC_STEPS.map((x, j) => [x[0], x[1], x[2], "tact", j]);
+  if (k === "tact") return TAC_STEPS.map((x, j) => [x[0], x[1], x[2], "tact", j, GM && /combat/i.test(x[0]) ? (/ground/i.test(x[0]) ? "arbiter-g" : "arbiter") : undefined]);
   if (k === "strat") { const c = SCN[n];
     return PRIMARY[n].map((x, j) => [x[0], x[1], x[2], "sp", j, x[3]]).concat([["Others may follow", "Going clockwise from you, each other player may use this card's secondary ability.", "", "strat", 1, "secondary"], ["Exhaust the card", `Flip ${c.name} to its exhausted side. Once all your strategy cards are used, you may pass on a later turn.`, "", "strat", 2]]); }
   if (k === "comp") return [["Choose what to play", "Anything with \"ACTION:\" on it that isn't a strategy card. Tap a type to see where to find it.", "", "comp", 2, "comp"], ["Play it", "Play the action card, or use the technology, leader, relic, exploration card, promissory note or faction ability that says ACTION.", "Cards that trigger on other timing, like \"after you activate a system\", are not component actions."], ["Resolve it", "Follow the card's text. Other players may answer with their own cards, such as Sabotage to cancel an action card.", ""]];
@@ -1702,6 +1769,10 @@ ${sel.tip ? `<p class="hint">${esc(sel.tip)}</p>` : ""}</div>`;
   return h;
 }
 function toolHTML(tool, a){
+  if (tool === "arbiter" || tool === "arbiter-g") {
+    const opp = S.players.filter(x => x.id !== a), here = (S.battles || []).filter(x => x.round === S.round && x.att === a).slice(-1)[0];
+    return `<div class="gm-arb"><div class="eyebrow">Battle Arbiter</div><p>${tool === "arbiter" ? "Ships fighting here?" : "Invading a defended planet?"} Pick the defender. The Arbiter opens with both factions loaded and brings you back to this step.</p><div class="chips">${opp.map(p => { const c = COLORS[p.color] || COLORS.blue; return `<button class="chip" data-g="arb" data-p="${p.id}" data-kind="${tool === "arbiter" ? "space" : "ground"}">${tok(p)}${esc(p.name)}</button>`; }).join("")}</div>${here ? `<p class="note"><b>Last battle:</b> ${esc(here.text)}</p>` : ""}</div>`;
+  }
   if (tool === "secondary") { const c = SCN[ACT.n]; if (!c) return "";
     return `<div class="key sec-key" style="--kc:${c.c}"><b>Everyone else may</b><p>${esc(c.s)}</p></div><p class="note"><b>${ACT.n === 1 ? "Free to follow." : "Costs 1 strategy token to follow."}</b> ${ACT.n === 1 ? "Leadership's secondary doesn't use a strategy token." : "Taken from the follower's strategy pool."} Players who don't want it simply say no.</p>`; }
   if (tool === "comp") return compHTML(a);
@@ -1797,12 +1868,12 @@ function renderRound(){
     if (!cust) m += `<div class="note" style="margin-bottom:14px"><b>Who took the custodians token?</b> They gain 1 VP, and every round from now on has an agenda phase.<div class="chips" style="margin-top:10px">${S.players.map(p => `<button class="chip" data-g="custodians" data-p="${p.id}"><span class="dot" style="--c:${(COLORS[p.color] || COLORS.blue).h}"></span>${esc(p.name)}</button>`).join("")}</div></div>`;
     const AG = [["First agenda","Reveal it, then vote in speaker order starting left of the speaker, then resolve."],["Second agenda","Reveal, vote and resolve the second agenda the same way."],["Ready planets","Each player readies their exhausted planets."]];
     m += `<ol class="checks">` + AG.map(([t, d], i) => { const k = 10 + i; return `<li class="ck ${g.checks[k] ? "done" : ""}"><button class="box" data-g="check" data-i="${k}" aria-pressed="${!!g.checks[k]}" aria-label="${t} done">${g.checks[k] ? "✓" : ""}</button><div class="tx"><b>${i + 1}. ${t}</b><span>${d}</span></div><span></span></li>`; }).join("") + `</ol>`;
-    m += `<div class="acts" style="margin-top:12px"><button class="big" data-act="award"><b>Record agenda points</b><span>Mutiny, Seed of an Empire, Political Censure, Imperial Rider, Classified Document Leaks.</span></button><button class="big" data-act="reveal"><b>Incentive Program</b><span>Reveal an extra Stage I (For) or Stage II (Against) objective.</span></button></div>`;
+    m += `<div class="acts" style="margin-top:12px">${GM ? `<button class="big gm-council" data-g="council"><b>Open the Council Chamber</b><span>Reveal, vote and resolve both agendas. Points they award come back here to confirm.</span></button>` : ""}<button class="big" data-act="award"><b>Record agenda points</b><span>Mutiny, Seed of an Empire, Political Censure, Imperial Rider, Classified Document Leaks.</span></button><button class="big" data-act="reveal"><b>Incentive Program</b><span>Reveal an extra Stage I (For) or Stage II (Against) objective.</span></button></div>`;
   }
   $("initBar").hidden = false;
   $("initBar").className = "time-strip";
   $("initBar").innerHTML = `<span class="so-l">Player time</span>${seat().map(pid => `<span class="ts ${g.active === pid ? "on" : ""}">${tok(P(pid))}${esc(pname(pid))} <b data-ptime="${pid}">${fmt(playerTime(pid))}</b></span>`).join("")}<span style="flex:1"></span><span class="so-l">Game</span><b class="ts-g" data-gtime>${fmt(elapsed())}</b>`;
-  $("rcMain").innerHTML = m;
+  $("rcMain").innerHTML = inboxHTML() + m;
 }
 function upNextList(){
   const g = S.g;
@@ -1838,6 +1909,10 @@ $("roundView").addEventListener("click", e => {
   else if (a === "sstep") { SG.step = +b.dataset.i; renderRound(); }
   else if (a === "snext") { SG.step = Math.min(STATUS_STEPS.length - 1, SG.step + 1); renderRound(); }
   else if (a === "sprev") { SG.step = Math.max(0, SG.step - 1); renderRound(); }
+  else if (a === "council") { if (GM) TI4.open("council"); }
+  else if (a === "cin") useInbox(b.dataset.ref);
+  else if (a === "cdis") { const r = b.dataset.ref; commit(() => markDone(r), "Dismissed a Council result.", "oth"); }
+  else if (a === "arb") { if (GM) { TI4.pending.set("arbiter", {gid:S.gid, attacker:g.active, defender:b.dataset.p, kind:b.dataset.kind, round:S.round, from:"ledger"}); TI4.open("arbiter"); } }
   else if (a === "gstep") { ACT.step = +b.dataset.i; renderRound(); }
   else if (a === "gnext") { ACT.step++; renderRound(); }
   else if (a === "gprev") { ACT.step = Math.max(0, ACT.step - 1); renderRound(); }
@@ -2053,6 +2128,13 @@ function startFromWizard(){
 S = load() || sample();
 render();
 setView("round");
+/* GameMaster: runs after the award dialog's own handler, so Undo brings the Council result back */
+$("awGo").addEventListener("click", () => { if (AWREF) { const r = AWREF; AWREF = null; markDone(r); save(); render(); } });
+if (GM) {
+  publishTable(); ingestBattles();
+  TI4.on("outbox", () => { ingestBattles(); render(); });
+  TI4.on("shell:shown", m => { if (m.tool === "ledger") { ingestBattles(); render(); } });
+}
 }
 </script>
 </body>
