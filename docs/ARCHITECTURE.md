@@ -33,7 +33,7 @@ Things worth knowing:
 ```
 /                         GitHub Pages serves this folder as-is (no build step)
 ├─ index.html             Shell: top bar (Ledger · Council · Arbiter), setup wizard, notice
-├─ ledger/                Ledger module (index.html, scenes.js, scenes.css)
+├─ ledger/                Ledger module (index.html, scenes.js, scenes.css)   ✅ ported: shared art, real download
 ├─ council/               Council Chamber module
 ├─ arbiter/               Battle Arbiter module (also /arbiter/#display for the TV)
 ├─ shared/
@@ -45,8 +45,7 @@ Things worth knowing:
 ├─ assets/
 │  ├─ units/              11 unit sprites (CC BY, see NOTICE.md)
 │  └─ factions/
-│     ├─ emblems/         24 small emblems the Ledger uses
-│     ├─ emblems-px/      24 larger pixel-art emblems the Arbiter uses
+│     ├─ emblems-px/      24 faction symbols (from the Battle Arbiter), used by every module
 │     └─ portraits/       24 portraits — official FFG art, © credit shown beside each (ART-AUDIT.md)
 ├─ docs/                  ARCHITECTURE.md, ART-AUDIT.md
 ├─ _import/               Untouched originals from the artifacts

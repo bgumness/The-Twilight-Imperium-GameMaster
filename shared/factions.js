@@ -36,8 +36,7 @@
   const FACTIONS = F.map(([id, name, set, ledger, arbiter, council]) => ({
     id, name, set, legacy: { ledger, arbiter, council },
     art: set === 'codex' ? {} : {
-      emblem:   `assets/factions/emblems/${id}.webp`,
-      emblemPx: `assets/factions/emblems-px/${id}.webp`,
+      emblem:   `assets/factions/emblems-px/${id}.webp`,   // the Battle Arbiter's symbols, used site-wide
       portrait: `assets/factions/portraits/${id}.webp`   // © Fantasy Flight Games: show the credit next to it
     }
   }));
