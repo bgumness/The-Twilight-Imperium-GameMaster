@@ -9,4 +9,7 @@ You need the board game to play.
 
 - Unit art is rendered from ["Twilight Imperium 4 ship models"](https://www.thingiverse.com/thing:4191414)
   by Saunick, licensed [CC BY](https://creativecommons.org/licenses/by/4.0/).
+- Faction portraits are official *Twilight Imperium: Fourth Edition* artwork, © Fantasy Flight Games,
+  used under the Asmodee North America fan-content guidelines (free, non-commercial, credited).
+  Wherever a portrait appears, the site shows "© Fantasy Flight Games" next to it.
 - Objective and agenda scene art is original SVG made for this project.

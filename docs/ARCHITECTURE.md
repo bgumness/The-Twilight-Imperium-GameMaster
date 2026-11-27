@@ -47,7 +47,7 @@ Things worth knowing:
 │  └─ factions/
 │     ├─ emblems/         24 small emblems the Ledger uses
 │     ├─ emblems-px/      24 larger pixel-art emblems the Arbiter uses
-│     └─ portraits-REVIEW/ 24 portraits — official FFG art, must not be published (ART-AUDIT.md)
+│     └─ portraits/       24 portraits — official FFG art, © credit shown beside each (ART-AUDIT.md)
 ├─ docs/                  ARCHITECTURE.md, ART-AUDIT.md
 ├─ _import/               Untouched originals from the artifacts
 ├─ NOTICE.md  README.md  .nojekyll

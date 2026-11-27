@@ -37,8 +37,8 @@
     id, name, set, legacy: { ledger, arbiter, council },
     art: set === 'codex' ? {} : {
       emblem:   `assets/factions/emblems/${id}.webp`,
-      emblemPx: `assets/factions/emblems-px/${id}.webp`
-      // portraits intentionally omitted until docs/ART-AUDIT.md is resolved
+      emblemPx: `assets/factions/emblems-px/${id}.webp`,
+      portrait: `assets/factions/portraits/${id}.webp`   // © Fantasy Flight Games: show the credit next to it
     }
   }));
   const byId = Object.fromEntries(FACTIONS.map(f => [f.id, f]));
