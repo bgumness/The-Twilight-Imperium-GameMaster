@@ -61,7 +61,7 @@
     l1z1x: ['Neural Motivator', 'Plasma Scoring'],
     mentak: ['Sarween Tools', 'Plasma Scoring'],
     naalu: ['Neural Motivator', 'Sarween Tools'],
-    nekro: ['Dacxive Animators'],
+    nekro: ['Dacxive Animators', 'Valefar Assimilator X', 'Valefar Assimilator Y'],
     sardakk: [],
     jolnar: ['Neural Motivator', 'Antimass Deflectors', 'Sarween Tools', 'Plasma Scoring'],
     winnu: [],
@@ -76,16 +76,19 @@
     titans: ['Antimass Deflectors', 'Scanlink Drone Network'],
     vuilraith: ['Self-Assembly Routines']
   };
-  /* Factions whose starting technologies depend on the rest of the table. */
-  const START_NOTE = { keleres: 'Chosen during setup from the technologies the other players start with: see the faction sheet.' };
+  /* Faction technologies that appear in starting lists (they can't be copied by Keleres). */
+  const FACTION_TECHS = ['Valefar Assimilator X', 'Valefar Assimilator Y'];
+  const START_NOTE = {};
   const NO_PREREQ = ['Neural Motivator', 'Sarween Tools', 'Plasma Scoring', 'Antimass Deflectors', 'Psychoarchaeology', 'Dark Energy Tap', 'Scanlink Drone Network', 'AI Development Algorithm'];
   const CHOOSE = {
     argent: { n: 2, from: ['Neural Motivator', 'Sarween Tools', 'Plasma Scoring'] },
-    winnu: { n: 1, from: NO_PREREQ }
+    winnu: { n: 1, from: NO_PREREQ },
+    /* "Choose 2 non-faction technologies owned by other players": the list is built from the rest of the table */
+    keleres: { n: 2, fromOthers: true }
   };
   /* Which technologies the other tools act on: Battle Arbiter tech keys, Council voting abilities. */
   const TECH_ARBITER = { 'Antimass Deflectors': 'antimass', 'Plasma Scoring': 'plasma', 'Graviton Laser System': 'graviton', 'Magen Defense Grid': 'magen', 'Dacxive Animators': 'dacxive', 'Duranium Armor': 'duranium', 'Assault Cannon': 'assault', 'X-89 Bacterial Weapon': 'x89' };
   const TECH_COUNCIL = { 'Predictive Intelligence': 'pi' };
 
-  root.TI4 = Object.assign(root.TI4 || {}, { FACTIONS, faction: id => byId[id] || null, fromLegacy, COLORS, START, START_NOTE, CHOOSE, TECH_ARBITER, TECH_COUNCIL });
+  root.TI4 = Object.assign(root.TI4 || {}, { FACTIONS, faction: id => byId[id] || null, fromLegacy, COLORS, START, START_NOTE, FACTION_TECHS, CHOOSE, TECH_ARBITER, TECH_COUNCIL });
 })(typeof window !== 'undefined' ? window : globalThis);

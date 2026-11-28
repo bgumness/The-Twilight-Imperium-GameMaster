@@ -4593,7 +4593,8 @@ addEventListener('storage', e=>{
   }catch(err){ return; }
   if (window.__gmReady) gmRefresh(false); else if (!$('#game').hidden) showGame(); else if ($('#battle').hidden) showSetup();
 });
-window.__gm={battleDone:gmBattleDone, take:gmTakeRequest};
+/* test hook, only when a test switches it on */
+try{ if (localStorage.getItem('ti4gm:test')==='1') window.__gm={battleDone:gmBattleDone, take:gmTakeRequest}; }catch(e){}
 if (GM){
   window.__gmReady=true;
   if (TI4.inShell) document.body.classList.add('in-shell');

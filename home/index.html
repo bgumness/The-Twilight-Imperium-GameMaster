@@ -264,10 +264,12 @@ footer b{color:var(--soft)}
 
   <footer>
     <b>GameMaster</b> is fan-made, free and non-commercial. It is not affiliated with, endorsed or sponsored by Fantasy Flight Games or Asmodee. Twilight Imperium is a trademark of Fantasy Flight Games, and faction portraits are © Fantasy Flight Games. You need the board game to play.
-    Unit art is rendered from <a href="https://www.thingiverse.com/thing:4191414" target="_blank" rel="noopener">Twilight Imperium 4 ship models</a> by Saunick, CC BY. Objective and agenda scenes are original art made for this site.
+    Unit art is rendered from <a href="https://www.thingiverse.com/thing:4191414" target="_blank" rel="noopener">Twilight Imperium 4 ship models</a> by Saunick, CC BY. Objective and agenda scenes are original art made for this site. Fonts are served with the site under the SIL Open Font License.
+    <br><span id="ver"></span> · Works offline once it has loaded; on a phone or tablet, use "Add to Home Screen" to keep it like an app.
   </footer>
 </main>
 
+<script src="../shared/version.js"></script>
 <script src="../shared/factions.js"></script>
 <script src="../shared/bus.js"></script>
 <script src="../shared/table.js"></script>
@@ -386,6 +388,7 @@ footer b{color:var(--soft)}
   function drawOpts() { const o = TI4.options.read(); $('opts').innerHTML = OPTS.map(([k, l]) => `<button class="chip" data-opt="${k}" aria-pressed="${!!o[k]}">${l}</button>`).join(''); }
   $('opts').addEventListener('click', e => { const b = e.target.closest('[data-opt]'); if (!b) return; const o = TI4.options.read(); TI4.options.write({ [b.dataset.opt]: !o[b.dataset.opt] }); drawOpts(); });
 
+  $('ver').textContent = window.TI4_VERSION ? 'Version ' + window.TI4_VERSION : '';
   /* ---- live ---- */
   const redraw = () => { drawCurrent(); drawSeason(); drawOpts(); };
   TI4.on('board', drawCurrent); TI4.on('table', drawCurrent); TI4.on('season', drawSeason); TI4.on('options', drawOpts);

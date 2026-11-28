@@ -36,4 +36,18 @@
     if (TI4.inShell) TI4.emit('shell:open', Object.assign({ tool }, extra || {}));
     else location.href = '../' + tool + '/';
   };
+
+  const tool = (location.pathname.match(/\/(ledger|council|arbiter)\/(index\.html)?$/) || [])[1];
+  /* an old direct link to /ledger/, /council/ or /arbiter/: open the full site instead
+     (the Arbiter's TV display, #display, still opens on its own) */
+  if (tool && !TI4.inShell && root.top === root && location.hash !== '#display' && !/[?&]solo\b/.test(location.search)) {
+    location.replace('../' + (tool === 'ledger' ? '#game' : '#' + tool));
+  }
+  /* Esc closes the Council or Arbiter, but only when none of their own windows was open */
+  if ((tool === 'council' || tool === 'arbiter') && TI4.inShell) {
+    let busy = false;
+    const open = () => !!document.querySelector('[role="dialog"]:not([hidden]), dialog[open], #procl:not([hidden])');
+    root.addEventListener('keydown', e => { if (e.key === 'Escape') busy = open(); }, true);
+    root.addEventListener('keydown', e => { if (e.key === 'Escape' && !busy && !open()) TI4.open('ledger'); });
+  }
 })(window);

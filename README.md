@@ -11,6 +11,17 @@ There's also a TV table screen and a season record of finished games.
 
 Everything runs in your browser. Your game is saved on your device; there are no accounts and no server.
 
+## Works offline, installs like an app
+
+Once the site has loaded, it keeps a complete copy and works with no connection. On a phone or tablet,
+use "Add to Home Screen" to keep it like an app. When a new version is published, it downloads in the
+background and the site offers "Update now"; nothing switches in the middle of a game on its own.
+
+## Changing the site
+
+After editing any file the site serves, run `python tools/build-offline.py` before committing. It
+refreshes the offline file list and the version number in `sw.js`. Browser tests: see `tests/README.md`.
+
 ## Run it locally
 
 Any static server works, for example:
@@ -27,6 +38,6 @@ Then open http://localhost:8000 (opening `index.html` straight from disk blocks 
 
 - `docs/ARCHITECTURE.md` — how the tools fit together and the shared game state.
 - `docs/ART-AUDIT.md` — art that must be replaced before going public.
-- `_import/` — the original tool code, kept unchanged for reference.
+- The original artifact code is in the git history (the first commit's `_import/` folder).
 
 See [NOTICE.md](NOTICE.md) for the fan-content notice and credits.
