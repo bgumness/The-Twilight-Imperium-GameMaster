@@ -4,9 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Twilight Imperium Ledger</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/fonts/fonts.css">
 <link rel="stylesheet" href="scenes.css">
 <style>
 /* VOICE: the Galactic Archive's war room, matching the Council Chamber; calm glass HUD, drama only on reveals.
@@ -843,12 +841,13 @@ const BY = Object.fromEntries(OBJ.map(o => [o.id, o]));
 const FACTIONS = ["Federation of Sol","Emirates of Hacan","Barony of Letnev","Universities of Jol-Nar","Xxcha Kingdom","Sardakk N'orr","Naalu Collective","Yssaril Tribes","Clan of Saar","Embers of Muaat","Mentak Coalition","L1Z1X Mindnet","Arborec","Winnu","Nekro Virus","Yin Brotherhood","Ghosts of Creuss","Argent Flight","Empyrean","Mahact Gene-Sorcerers","Naaz-Rokha Alliance","The Nomad","Titans of Ul","Vuil'raith Cabal","Council Keleres"];
 const COLORS = {red:{n:"Red",h:"#ff5a52"},blue:{n:"Blue",h:"#4f8dff"},green:{n:"Green",h:"#3fbf6f",t:"#06140b"},yellow:{n:"Yellow",h:"#f2d14b",t:"#1d1704"},purple:{n:"Purple",h:"#a77bff"},black:{n:"Black",h:"#3a4152"},orange:{n:"Orange",h:"#ff9a3c",t:"#1f1003"},pink:{n:"Pink",h:"#ff7ac6",t:"#24071a"}};
 
-const FKEY = {"Federation of Sol":"sol","Emirates of Hacan":"hacan","Barony of Letnev":"letnev","Universities of Jol-Nar":"jolnar","Xxcha Kingdom":"xxcha","Sardakk N'orr":"norr","Naalu Collective":"naalu","Yssaril Tribes":"yssaril","Clan of Saar":"saar","Embers of Muaat":"muaat","Mentak Coalition":"mentak","L1Z1X Mindnet":"l1z1x","Arborec":"arborec","Winnu":"winnu","Nekro Virus":"nekro","Yin Brotherhood":"yin","Ghosts of Creuss":"creuss","Argent Flight":"argent","Empyrean":"empyrean","Mahact Gene-Sorcerers":"mahact","Naaz-Rokha Alliance":"naazrokha","The Nomad":"nomad","Titans of Ul":"titans","Vuil'raith Cabal":"vuilraith"};
+const FKEY = {"Council Keleres":"keleres","Federation of Sol":"sol","Emirates of Hacan":"hacan","Barony of Letnev":"letnev","Universities of Jol-Nar":"jolnar","Xxcha Kingdom":"xxcha","Sardakk N'orr":"norr","Naalu Collective":"naalu","Yssaril Tribes":"yssaril","Clan of Saar":"saar","Embers of Muaat":"muaat","Mentak Coalition":"mentak","L1Z1X Mindnet":"l1z1x","Arborec":"arborec","Winnu":"winnu","Nekro Virus":"nekro","Yin Brotherhood":"yin","Ghosts of Creuss":"creuss","Argent Flight":"argent","Empyrean":"empyrean","Mahact Gene-Sorcerers":"mahact","Naaz-Rokha Alliance":"naazrokha","The Nomad":"nomad","Titans of Ul":"titans","Vuil'raith Cabal":"vuilraith"};
 const ART = "../assets/";
 const fid = f => FKEY[f] === "norr" ? "sardakk" : FKEY[f];
 const emblemOf = f => FKEY[f] ? `${ART}factions/emblems-px/${fid(f)}.webp` : null;
 const emblem = p => emblemOf(p?.faction);
-const portrait = p => FKEY[p?.faction] ? `${ART}factions/portraits/${fid(p.faction)}.webp` : null;
+const NO_PORTRAIT = new Set(["keleres"]);
+const portrait = p => FKEY[p?.faction] && !NO_PORTRAIT.has(FKEY[p.faction]) ? `${ART}factions/portraits/${fid(p.faction)}.webp` : null;
 const SC = [
   {n:1,name:"Leadership",c:"#e5483d",ab:"Gain 3 command tokens, then spend influence for more.",p:"Gain 3 command tokens. Spend any amount of influence to gain 1 command token for every 3 influence spent.",s:"Spend any amount of influence to gain 1 command token for every 3 influence spent."},
   {n:2,name:"Diplomacy",c:"#f28c28",ab:"Shield one system from other players and ready up to 2 exhausted planets.",p:"Choose 1 system other than Mecatol Rex that contains a planet you control. Each other player places a command token from their reinforcements there. Then ready up to 2 exhausted planets you control.",s:"Spend 1 strategy token to ready up to 2 exhausted planets you control."},
@@ -1080,7 +1079,7 @@ function useInbox(ref){
   }
   if (!src) return;
   openAward(); AW.src = src; AW.pids = pids; AW.leak = leak; AWREF = ref; drawAward();
-  if (x.agenda === "seed-of-an-empire" && !pids.length) $("awNote").textContent = "Tied for " + (x.outcome === "for" ? "the most" : "the fewest") + " points: the speaker decides who gains it. " + SRC.seed.note;
+  if (x.agenda === "seed-of-an-empire" && !pids.length) $("awNote").textContent = "Several players are tied for " + (x.outcome === "for" ? "the most" : "the fewest") + " points. Settle it at the table (the Living Rules Reference has the final word), then pick who gains it. " + SRC.seed.note;
 }
 function ingestBattles(){
   if (!GM || !S) return;
@@ -2130,7 +2129,7 @@ function wizTechHTML(ps){
       const used = t => TI4.TECH_ARBITER[t] || TI4.TECH_COUNCIL[t];
       const chip = (t, on, btn) => `<${btn ? "button" : "span"} class="chip tch ${used(t) ? "live" : ""}" ${btn ? `data-w="tch" data-i="${i}" data-t="${esc(t)}"` : ""} aria-pressed="${on}" title="${used(t) ? (TI4.TECH_ARBITER[t] ? "Used by the Battle Arbiter" : "Used by the Council Chamber") : ""}">${esc(t)}</${btn ? "button" : "span"}>`;
       return `<div class="wz-trow" style="--c:${c.h}">${tok({...p, id:"w" + i})}<div><b>${esc(p.name || "Player " + (i + 1))}</b><span>${esc(p.faction)}</span></div><div class="chips">${
-        fixed.length ? fixed.map(t => chip(t, true, false)).join("") : ch ? "" : `<span class="hint">No starting technologies</span>`}${
+        fixed.length ? fixed.map(t => chip(t, true, false)).join("") : ch ? "" : TI4.START_NOTE[id] ? `<span class="hint">${esc(TI4.START_NOTE[id])}</span>` : `<span class="hint">No starting technologies</span>`}${
         ch ? `<span class="hint">Choose ${ch.n}:</span>` + ch.from.map(t => chip(t, pick.includes(t), true)).join("") : ""}</div></div>`; }).join("") +
     `</div><p class="hint">Highlighted technologies change battles or votes. The rest are listed so the table can check their sheets.</p>`;
 }
@@ -2235,6 +2234,19 @@ S = load() || sample();
 render();
 setView("round");
 $("mnOpts").addEventListener("click", e => { const b = e.target.closest("[data-opt]"); if (!b || !GM) return; const k = b.dataset.opt, o = TI4.options.read(); TI4.options.write({[k]: !o[k]}); drawMenu(); });
+/* the same game open in another tab or window: take its saves instead of overwriting them */
+addEventListener("storage", e => {
+  if (e.key !== LS || !e.newValue) return;
+  try { const s = JSON.parse(e.newValue); if (!s || s.v !== 1 || !Array.isArray(s.players)) return;
+    S = fix(s); undoStack.length = 0; render(); syncNote(); } catch (_) {}
+});
+function syncNote(){
+  let n = document.getElementById("syncNote");
+  if (!n) { n = document.createElement("div"); n.id = "syncNote"; n.textContent = "Updated from another window";
+    n.style.cssText = "position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;padding:9px 16px;border-radius:999px;background:rgba(10,15,30,.94);border:1px solid rgba(139,230,226,.5);color:#e9eef7;font:500 13px/1.2 Barlow,system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:opacity .4s;pointer-events:none";
+    document.body.appendChild(n); }
+  n.style.opacity = "1"; clearTimeout(syncNote.t); syncNote.t = setTimeout(() => { n.style.opacity = "0"; }, 2200);
+}
 /* GameMaster: runs after the award dialog's own handler, so Undo brings the Council result back */
 $("awGo").addEventListener("click", () => { if (AWREF) { const r = AWREF; AWREF = null; markDone(r); save(); render(); } });
 if (GM) {

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>GameMaster · Twilight Imperium companion</title>
+<link rel="stylesheet" href="shared/fonts/fonts.css">
 <meta name="description" content="Free fan-made companion for Twilight Imperium 4 + Prophecy of Kings: objectives and rounds, agenda phase, and combat in one place.">
 <meta name="theme-color" content="#05070d">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpolygon points='20,2 36,11 36,29 20,38 4,29 4,11' fill='%230b1020' stroke='%23e8c36a' stroke-width='2.5'/%3E%3Cpath d='M20 11l2.6 5.6 6 .7-4.5 4.1 1.3 6L20 24.5l-5.4 2.9 1.3-6-4.5-4.1 6-.7z' fill='%23e8c36a'/%3E%3C/svg%3E">
@@ -79,14 +80,27 @@ window.TI4_SHELL = true;
     }
     return sheets[tool];
   }
-  function show(tool, push) {
+  /* history: opening screen (0) → game (1) → Council/Arbiter (2). Going deeper adds a history entry,
+     coming back out uses the browser's own Back, so the phone's Back button and the on-screen buttons agree. */
+  const LV = t => t === 'home' ? 0 : t === 'ledger' ? 1 : 2;
+  const urlOf = t => t === 'home' ? location.pathname + location.search : '#' + (t === 'ledger' ? 'game' : t);
+  const fromHash = () => { const h = location.hash.slice(1); return h === 'council' || h === 'arbiter' ? h : h === 'game' ? 'ledger' : 'home'; };
+  function show(tool, nav) {             // nav: undefined = normal, 'pop' = from the Back button, false = no history change
     if (tool !== 'council' && tool !== 'arbiter' && tool !== 'home') tool = 'ledger';
     if (tool === current) return;
+    const st = history.state || {};
+    if (nav === undefined && LV(tool) < LV(current) && st.gm === current && st.d > 0) {
+      back = tool; history.back(); return;      // the popstate handler finishes the move
+    }
+    const from = current;
     current = tool;
     for (const t in sheets) if (t !== tool) sheets[t].classList.remove('on');
     if (tool !== 'ledger') { const el = sheet(tool); requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on'))); }
     document.body.classList.toggle('up', tool === 'council' || tool === 'arbiter');
-    if (push !== false) history.replaceState(null, '', tool === 'home' ? location.pathname + location.search : '#' + (tool === 'ledger' ? 'game' : tool));
+    if (nav === undefined) {
+      if (LV(tool) > LV(from)) history.pushState({ gm: tool, d: (st.d || 0) + 1 }, '', urlOf(tool));
+      else history.replaceState({ gm: tool, d: st.d || 0 }, '', urlOf(tool));
+    }
     TI4.emit('shell:shown', { tool });
     try { (tool === 'ledger' ? base : sheet(tool).firstChild).contentWindow.focus(); } catch (e) {}
   }
@@ -94,12 +108,18 @@ window.TI4_SHELL = true;
   TI4.on('shell:about', () => document.getElementById('about').showModal());
   /* a loaded game: drop the Council and Arbiter so they reopen from the new data */
   TI4.on('shell:reload', () => { for (const t of ['council', 'arbiter']) if (sheets[t]) { sheets[t].remove(); delete sheets[t]; } if (current === 'council' || current === 'arbiter') { current = 'ledger'; document.body.classList.remove('up'); } });
-  addEventListener('hashchange', () => show(location.hash.slice(1), false));
+  let back = null;
+  addEventListener('popstate', e => {
+    const t = (e.state && e.state.gm) || fromHash();
+    show(t, 'pop');
+    if (back && back !== current && LV(back) < LV(current)) { const want = back; back = null; show(want); } else back = null;
+  });
 
   /* arrive on the opening screen; #game, #council or #arbiter open straight into play */
   const h = location.hash.slice(1);
-  if (h === 'council' || h === 'arbiter') setTimeout(() => show(h, false), 300);
-  else if (h !== 'game') show('home', false);
+  if (h === 'council' || h === 'arbiter') { history.replaceState({ gm: 'ledger', d: 0 }, '', '#game'); setTimeout(() => show(h), 300); }
+  else if (h === 'game') history.replaceState({ gm: 'ledger', d: 0 }, '', '#game');
+  else { show('home', false); history.replaceState({ gm: 'home', d: 0 }, '', urlOf('home')); }
   document.getElementById('boot').classList.add('gone');
 })();
 </script>

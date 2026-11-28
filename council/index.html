@@ -4,9 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TI4 Galactic Council Chamber</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/fonts/fonts.css">
 <style>
 /* Layout: the Galactic Archive's world. Starfield behind glass HUD panels; reveal = full-bleed scene with a glass dossier docked right.
    Oxanium caps for display, Barlow body, JetBrains Mono for labels; cyan for interface, gold for what matters most. */
@@ -4335,6 +4333,11 @@ window.COUNCIL_CARDS = {
     gmLawWatch();
   }
 
+  /* the same game open in another tab or window: take its saves instead of overwriting them */
+  window.addEventListener('storage', function (e) {
+    if (e.key !== KEY || !e.newValue) return;
+    try { var s = JSON.parse(e.newValue); if (!s || !s.round) return; state = s; render(); } catch (err) {}
+  });
   function start(data) {
     state = load(data && data.state);
     var synced = gmSync();

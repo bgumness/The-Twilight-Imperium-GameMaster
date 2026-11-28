@@ -29,13 +29,13 @@
     ['nomad',     'The Nomad',                   'pok',  'The Nomad',                  'nomad',    'nomad'],
     ['titans',    'The Titans of Ul',            'pok',  'Titans of Ul',               'titans',   'titans-of-ul'],
     ['vuilraith', 'The Vuil’raith Cabal',   'pok',  "Vuil'raith Cabal",           'vuil',     'vuil-raith-cabal'],
-    // Codex faction: only the Council Chamber knows it today; no art yet.
-    ['keleres',   'The Council Keleres',         'codex', null,                        null,       'council-keleres']
+    // Codex faction (Codex III). Original symbol; no portrait.
+    ['keleres',   'The Council Keleres',         'codex', 'Council Keleres',           'keleres',  'council-keleres']
   ];
 
   const FACTIONS = F.map(([id, name, set, ledger, arbiter, council]) => ({
     id, name, set, legacy: { ledger, arbiter, council },
-    art: set === 'codex' ? {} : {
+    art: set === 'codex' ? { emblem: `assets/factions/emblems-px/${id}.webp` } : {
       emblem:   `assets/factions/emblems-px/${id}.webp`,   // the Battle Arbiter's symbols, used site-wide
       portrait: `assets/factions/portraits/${id}.webp`   // © Fantasy Flight Games: show the credit next to it
     }
@@ -76,6 +76,8 @@
     titans: ['Antimass Deflectors', 'Scanlink Drone Network'],
     vuilraith: ['Self-Assembly Routines']
   };
+  /* Factions whose starting technologies depend on the rest of the table. */
+  const START_NOTE = { keleres: 'Chosen during setup from the technologies the other players start with: see the faction sheet.' };
   const NO_PREREQ = ['Neural Motivator', 'Sarween Tools', 'Plasma Scoring', 'Antimass Deflectors', 'Psychoarchaeology', 'Dark Energy Tap', 'Scanlink Drone Network', 'AI Development Algorithm'];
   const CHOOSE = {
     argent: { n: 2, from: ['Neural Motivator', 'Sarween Tools', 'Plasma Scoring'] },
@@ -85,5 +87,5 @@
   const TECH_ARBITER = { 'Antimass Deflectors': 'antimass', 'Plasma Scoring': 'plasma', 'Graviton Laser System': 'graviton', 'Magen Defense Grid': 'magen', 'Dacxive Animators': 'dacxive', 'Duranium Armor': 'duranium', 'Assault Cannon': 'assault', 'X-89 Bacterial Weapon': 'x89' };
   const TECH_COUNCIL = { 'Predictive Intelligence': 'pi' };
 
-  root.TI4 = Object.assign(root.TI4 || {}, { FACTIONS, faction: id => byId[id] || null, fromLegacy, COLORS, START, CHOOSE, TECH_ARBITER, TECH_COUNCIL });
+  root.TI4 = Object.assign(root.TI4 || {}, { FACTIONS, faction: id => byId[id] || null, fromLegacy, COLORS, START, START_NOTE, CHOOSE, TECH_ARBITER, TECH_COUNCIL });
 })(typeof window !== 'undefined' ? window : globalThis);

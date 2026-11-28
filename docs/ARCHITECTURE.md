@@ -231,3 +231,16 @@ Known gaps:
   active player, speaker, VP by type, revealed objectives with scorers, last battle) and `ti4gm:laws`
   (published by the Council). Updates live over the bus with a 5-second fallback poll; asks the browser to
   keep the screen awake; scales the score lanes to fit up to 8 players.
+
+## 12. Review fixes (2026-11-27)
+
+* **Council Keleres** is mapped in `shared/factions.js` (Ledger "Council Keleres", Arbiter `keleres`, Council
+  `council-keleres`) with an original symbol; no portrait. Its starting technologies show a note instead of a list.
+* **Two tabs or windows** of the same game: the Ledger, Council and Arbiter listen for `storage` events on their
+  own keys and reload from another tab's save instead of overwriting it (the Arbiter never mid-battle). The Ledger
+  shows "Updated from another window".
+* **Back button**: the shell keeps a small history stack (opening screen → game → Council/Arbiter). Going deeper
+  pushes an entry; the on-screen ways back use `history.back()` when the entry below is the site's own, so the
+  browser/phone Back button and the buttons agree. Opening at `#game` never steps back off the site.
+* **Fonts** are served from `shared/fonts/` (OFL). No page loads anything from another site.
+* The Seed of an Empire tie note no longer states a ruling.

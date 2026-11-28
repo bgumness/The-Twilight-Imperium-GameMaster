@@ -12,4 +12,5 @@ You need the board game to play.
 - Faction portraits are official *Twilight Imperium: Fourth Edition* artwork, © Fantasy Flight Games,
   used under the Asmodee North America fan-content guidelines (free, non-commercial, credited).
   Wherever a portrait appears, the site shows "© Fantasy Flight Games" next to it.
-- Objective and agenda scene art is original SVG made for this project.
+- Objective and agenda scene art is original SVG made for this project. The Council Keleres symbol is original art made for this project.
+- Fonts (Oxanium, Barlow, Barlow Semi Condensed, JetBrains Mono) are served with the site under the SIL Open Font License; see `shared/fonts/OFL.txt`.

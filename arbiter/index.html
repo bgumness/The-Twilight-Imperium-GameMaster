@@ -10,8 +10,7 @@
 </style></head><body>
 <title>TI4 Battle Arbiter</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600&family=Oxanium:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="../shared/fonts/fonts.css">
 <style>
 /* Layout: two-screen tool. Muster = two opposing force cards over a sticky odds bar.
    Engagement = holotable scene + dice tray on the left, rules-walkthrough console on the right (stacks on phones). */
@@ -905,7 +904,7 @@ const EMBLEMS = {
 };
 /* Pixel-art faction logos (Ben's set, Base + PoK). They replace the drawn sigils above;
    factions without a logo here (Keleres, Thunder's Edge) keep their sigil. */
-const FACTION_ART={"arborec": "../assets/factions/emblems-px/arborec.webp", "argent": "../assets/factions/emblems-px/argent.webp", "letnev": "../assets/factions/emblems-px/letnev.webp", "vuil": "../assets/factions/emblems-px/vuilraith.webp", "empyrean": "../assets/factions/emblems-px/empyrean.webp", "creuss": "../assets/factions/emblems-px/creuss.webp", "hacan": "../assets/factions/emblems-px/hacan.webp", "jolnar": "../assets/factions/emblems-px/jolnar.webp", "l1z1x": "../assets/factions/emblems-px/l1z1x.webp", "mahact": "../assets/factions/emblems-px/mahact.webp", "mentak": "../assets/factions/emblems-px/mentak.webp", "muaat": "../assets/factions/emblems-px/muaat.webp", "naalu": "../assets/factions/emblems-px/naalu.webp", "naaz": "../assets/factions/emblems-px/naazrokha.webp", "nekro": "../assets/factions/emblems-px/nekro.webp", "nomad": "../assets/factions/emblems-px/nomad.webp", "saar": "../assets/factions/emblems-px/saar.webp", "sardakk": "../assets/factions/emblems-px/sardakk.webp", "sol": "../assets/factions/emblems-px/sol.webp", "titans": "../assets/factions/emblems-px/titans.webp", "winnu": "../assets/factions/emblems-px/winnu.webp", "xxcha": "../assets/factions/emblems-px/xxcha.webp", "yin": "../assets/factions/emblems-px/yin.webp", "yssaril": "../assets/factions/emblems-px/yssaril.webp"};
+const FACTION_ART={"arborec": "../assets/factions/emblems-px/arborec.webp", "argent": "../assets/factions/emblems-px/argent.webp", "letnev": "../assets/factions/emblems-px/letnev.webp", "vuil": "../assets/factions/emblems-px/vuilraith.webp", "empyrean": "../assets/factions/emblems-px/empyrean.webp", "creuss": "../assets/factions/emblems-px/creuss.webp", "hacan": "../assets/factions/emblems-px/hacan.webp", "jolnar": "../assets/factions/emblems-px/jolnar.webp", "l1z1x": "../assets/factions/emblems-px/l1z1x.webp", "mahact": "../assets/factions/emblems-px/mahact.webp", "mentak": "../assets/factions/emblems-px/mentak.webp", "muaat": "../assets/factions/emblems-px/muaat.webp", "naalu": "../assets/factions/emblems-px/naalu.webp", "naaz": "../assets/factions/emblems-px/naazrokha.webp", "nekro": "../assets/factions/emblems-px/nekro.webp", "nomad": "../assets/factions/emblems-px/nomad.webp", "saar": "../assets/factions/emblems-px/saar.webp", "sardakk": "../assets/factions/emblems-px/sardakk.webp", "sol": "../assets/factions/emblems-px/sol.webp", "titans": "../assets/factions/emblems-px/titans.webp", "winnu": "../assets/factions/emblems-px/winnu.webp", "xxcha": "../assets/factions/emblems-px/xxcha.webp", "yin": "../assets/factions/emblems-px/yin.webp", "yssaril": "../assets/factions/emblems-px/yssaril.webp", "keleres": "../assets/factions/emblems-px/keleres.webp"};
 for (const k in FACTION_ART) EMBLEMS[k]=`<image href="${FACTION_ART[k]}" x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>`;
 /* HTML <svg> for an emblem */
 function emblemSvg(fac, cls='emb', title=''){ const m=EMBLEMS[fac]||EMBLEMS.none;
@@ -4583,6 +4582,17 @@ function gmPill(msg, done){
     document.body.appendChild(el); }
   el.className=(done?'done':'')+(msg?'':' bare'); el.querySelector('span').textContent=msg||'';
 }
+/* the same game open in another tab or window: take its saves (never in the middle of a battle) */
+addEventListener('storage', e=>{
+  if ((e.key!==STORE && e.key!==GSTORE) || !e.newValue) return;
+  if (current && !current.finished) return;
+  try{
+    const v=JSON.parse(e.newValue);
+    if (e.key===STORE && v && v.A && v.D){ v.ui=v.ui||{}; v.env=v.env||{}; v.env.invade=true; CFG=v; }
+    if (e.key===GSTORE && v && v.players && v.players.length) GAME=v;
+  }catch(err){ return; }
+  if (window.__gmReady) gmRefresh(false); else if (!$('#game').hidden) showGame(); else if ($('#battle').hidden) showSetup();
+});
 window.__gm={battleDone:gmBattleDone, take:gmTakeRequest};
 if (GM){
   window.__gmReady=true;
